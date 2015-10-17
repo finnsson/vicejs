@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "amd",
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "sourceMap": true,
+    "jsx": "preserve"
+  },
+  "filesGlob": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "!./node_modules/**/*.ts",
+    "!./node_modules/**/*.tsx"
+  ],
+  "files": [
+    "index.d.ts",
+    "index.ts",
+    "modules/customElement.d.ts",
+    "modules/customElement.ts",
+    "modules/elms.ts",
+    "modules/state.d.ts",
+    "modules/state.ts",
+    "registerElement.d.ts",
+    "vice-api.d.ts"
+  ],
+  "exclude": []
+}

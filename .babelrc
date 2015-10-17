@@ -1,0 +1,6 @@
+{
+  "plugins": ["babel-snabbdom-jsx"],
+  "blacklist": ["react"],
+  "ignore": ["node_modules", "./index.js$"],
+  "sourceMaps": true
+}
