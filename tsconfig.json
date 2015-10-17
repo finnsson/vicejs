@@ -19,6 +19,7 @@
     "index.ts",
     "modules/customElement.d.ts",
     "modules/customElement.ts",
+    "modules/elms.d.ts",
     "modules/elms.ts",
     "modules/state.d.ts",
     "modules/state.ts",
