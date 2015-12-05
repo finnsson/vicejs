@@ -1,1 +1,1 @@
-export declare function vice(klass: typeof HTMLElement, patch: any, tagName?: string): string;
+export declare function vice<K extends typeof HTMLElement>(klass: K, patch: any, tagName?: string): K;

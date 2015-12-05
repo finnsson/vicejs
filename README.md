@@ -56,6 +56,9 @@ Some helpful modules that can be included are
 
 ## TODO
 
+* babel-snabbdom-jsx should handle vicejs custom elements-functions.
+* create decorator for vice in order to ease export-syntax
+* use tup instead of npm as task manager
 * write unit tests
 * add mixin-ability. Mixins should be able to listen on events automatically,
   not just add methods.

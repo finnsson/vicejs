@@ -1,6 +1,12 @@
 var tagCounter = 1;
 
-export function vice(klass: typeof HTMLElement, patch, tagName?: string): string {
+if (typeof HTMLElement !== "function") {
+  var _HTMLElement = function() {/* Intentionally empty */};
+  _HTMLElement.prototype = HTMLElement.prototype;
+  window["HTMLElement"] = _HTMLElement;
+}
+
+export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: string): K {
 
   if (!tagName) {
     tagName = "x-vice-" + tagCounter++;
@@ -67,26 +73,21 @@ export function vice(klass: typeof HTMLElement, patch, tagName?: string): string
 
     if (this.runUpdate) {
       var newVnode = this.render();
-      // enable normal DOM API (replaceChild) before patch. TODO: solve using a "proxy" on oldVnode and this.el.parentElement.replaceChild
+      // enable normal DOM API before patch
       shadowDOM = false;
-      if(Array.isArray(newVnode)) {
-        // TODO: handle case when jumping from/to vnode array
-        var oldVnodeWrapper = {
-          sel: this.getTagName(),
-          elm: this,
-          data: {},
-          children: this.oldVnode || [{sel: "div", elm: this.el, data: {}, children: []}]
-        };
-        var newVnodeWrapper = {
-          sel: this.getTagName(),
-          elm: undefined,
-          data: {},
-          children: newVnode
-        };
-        patch(oldVnodeWrapper, newVnodeWrapper);
-      } else {
-        patch(this.oldVnode || this.el, newVnode);
-      }
+      var oldVnodeWrapper = {
+        sel: this.getTagName(),
+        elm: this,
+        data: {},
+        children: Array.isArray(this.oldVnode) ? this.oldVnode : [this.oldVnode]
+      };
+      var newVnodeWrapper = {
+        sel: this.getTagName(),
+        elm: undefined,
+        data: {},
+        children: Array.isArray(newVnode) ? newVnode : [newVnode]
+      };
+      patch(oldVnodeWrapper, newVnodeWrapper);
 
       // disable normal DOM API after patch
       shadowDOM = true;
@@ -114,8 +115,10 @@ export function vice(klass: typeof HTMLElement, patch, tagName?: string): string
       removeChild.call(this, this.firstChild);
     }
     // temporary placeholder div.
+    /*
     this.el = document.createElement("div");
     appendChild.call(this, this.el);
+    */
   };
 
   if (!klass.prototype.setState) {
@@ -125,6 +128,13 @@ export function vice(klass: typeof HTMLElement, patch, tagName?: string): string
         this.state = newState;
         this.update();
       }
+    };
+  }
+
+  if(!klass.prototype["patchState"]) {
+    klass.prototype["patchState"] = function(newState) {
+      this.state = Object["assign"]({}, this.state, newState);
+      this.update();
     };
   }
 
@@ -147,5 +157,5 @@ export function vice(klass: typeof HTMLElement, patch, tagName?: string): string
 
   document.registerElement(tagName, klass);
 
-  return tagName;
+  return klass;
 };
