@@ -26,5 +26,8 @@
     "./registerElement.d.ts",
     "./vice-api.d.ts"
   ],
-  "exclude": []
+  "exclude": [],
+  "atom": {
+    "rewriteTsconfig": true
+  }
 }
