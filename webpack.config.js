@@ -2,17 +2,14 @@ module.exports = {
   entry: "./test/test.jsx",
   output: {
     path: __dirname,
-    filename: "./test/tmp.js",
-    sourceMapFilename: "[file].map"
+    filename: "./test/test.js",
+    sourceMapFilename: "./test/test.js.map"
   },
-  // devtool: 'source-map',
   module: {
-  loaders: [
-    {
+    loaders: [{
       test: /\.jsx?$/,
       exclude: /(node_modules|bower_components)/,
       loader: 'babel'
-    }
-  ]
-}
+    }]
+  }
 };

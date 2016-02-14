@@ -1,7 +1,9 @@
 define(["require", "exports"], function (require, exports) {
+    "use strict";
     function setVnodeState(oldVnode, vnode) {
         if (vnode.data.state) {
-            vnode.elm.setState(vnode.data.state);
+            vnode.elm.runUpdate = true;
+            vnode.elm.streamState(vnode.data.state);
         }
     }
     ;

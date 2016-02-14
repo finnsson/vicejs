@@ -23,8 +23,14 @@
     "./modules/elms.ts",
     "./modules/state.d.ts",
     "./modules/state.ts",
-    "./registerElement.d.ts",
-    "./vice-api.d.ts"
+    "./typings/assertion-error/assertion-error.d.ts",
+    "./typings/chai/chai.d.ts",
+    "./typings/flyd-mirror.d.ts",
+    "./typings/flyd.d.ts",
+    "./typings/mocha/mocha.d.ts",
+    "./typings/registerElement.d.ts",
+    "./typings/snabbdom.d.ts",
+    "./typings/vice-api.d.ts"
   ],
   "exclude": [],
   "atom": {

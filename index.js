@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "snabbdom/h", "flyd-mirror"], function (require, exports, h, fm) {
     "use strict";
     var tagCounter = 1;
     if (typeof HTMLElement !== "function") {
@@ -6,6 +6,12 @@ define(["require", "exports"], function (require, exports) {
         _HTMLElement.prototype = HTMLElement.prototype;
         window["HTMLElement"] = _HTMLElement;
     }
+    exports.viceView = {
+        createElement: function (tag, attributes, children) {
+            console.error(arguments);
+            return h(tag, attributes, children);
+        }
+    };
     function vice(klass, patch, tagName) {
         if (!tagName) {
             tagName = "x-vice-" + tagCounter++;
@@ -13,12 +19,10 @@ define(["require", "exports"], function (require, exports) {
         var shadowDOM = true;
         var appendChild = klass.prototype.appendChild;
         klass.prototype.appendChild = function (child) {
-            console.error("append child for", this, shadowDOM);
             if (shadowDOM) {
                 this.innerChildNodes.push(child);
             }
             else {
-                console.error("appending", child, appendChild);
                 appendChild.apply(this, arguments);
             }
             return child;
@@ -63,7 +67,7 @@ define(["require", "exports"], function (require, exports) {
                 this._isInitialized = true;
             }
             if (this.runUpdate) {
-                var newVnode = this.render();
+                var newVnode = this.render(this.state);
                 shadowDOM = false;
                 var oldVnodeWrapper = {
                     sel: this.getTagName(),
@@ -80,10 +84,10 @@ define(["require", "exports"], function (require, exports) {
                 patch(oldVnodeWrapper, newVnodeWrapper);
                 shadowDOM = true;
                 this.oldVnode = newVnode;
-                var afterUpdate = document.createEvent("Event");
-                afterUpdate.initEvent("after-update", true, true);
+                var afterUpdate_1 = document.createEvent("Event");
+                afterUpdate_1.initEvent("after-update", true, true);
                 setTimeout(function () {
-                    _this.dispatchEvent(afterUpdate);
+                    _this.dispatchEvent(afterUpdate_1);
                 });
             }
         };
@@ -101,6 +105,15 @@ define(["require", "exports"], function (require, exports) {
                     this.state = newState;
                     this.update();
                 }
+            };
+        }
+        if (!klass.prototype["streamState"]) {
+            klass.prototype["streamState"] = function (streamState) {
+                var _this = this;
+                this.state = streamState;
+                this.localMirror = fm.mirror(function () {
+                    _this.update();
+                });
             };
         }
         if (!klass.prototype["patchState"]) {

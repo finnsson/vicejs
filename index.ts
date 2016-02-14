@@ -1,10 +1,23 @@
-var tagCounter = 1;
+import * as h from "snabbdom/h";
+
+import * as flyd from "flyd";
+
+import * as fm from "flyd-mirror";
+
+let tagCounter = 1;
 
 if (typeof HTMLElement !== "function") {
-  var _HTMLElement = function() {/* Intentionally empty */};
+  let _HTMLElement = function() {/* Intentionally empty */};
   _HTMLElement.prototype = HTMLElement.prototype;
   window["HTMLElement"] = _HTMLElement;
 }
+
+export var viceView = {
+  createElement: function(tag: string, attributes: any, children: any[]) {
+    console.error(arguments);
+    return h(tag, attributes, children);
+  }
+};
 
 export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: string): K {
 
@@ -13,22 +26,20 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
   }
 
   // "Shadom DOM" for child elements.
-  var shadowDOM = true;
+  let shadowDOM = true;
 
-  var appendChild = klass.prototype.appendChild;
+  let appendChild = klass.prototype.appendChild;
 
   klass.prototype.appendChild = function(child) {
-    console.error("append child for", this, shadowDOM);
     if (shadowDOM) {
       this.innerChildNodes.push(child);
     } else {
-      console.error("appending", child, appendChild);
       appendChild.apply(this, arguments);
     }
     return child;
   };
 
-  var replaceChild = klass.prototype.replaceChild;
+  let replaceChild = klass.prototype.replaceChild;
   klass.prototype.replaceChild = function(oldChild, newChild) {
     if (shadowDOM) {
       this.innerChildNodes[this.innerChildNodes.indexOf(oldChild)] = newChild;
@@ -38,7 +49,7 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
     return oldChild;
   };
 
-  var removeChild = klass.prototype.removeChild;
+  let removeChild = klass.prototype.removeChild;
 
   klass.prototype.removeChild = function(child) {
     if (shadowDOM) {
@@ -49,7 +60,7 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
     return child;
   };
 
-  var insertBefore = klass.prototype.insertBefore;
+  let insertBefore = klass.prototype.insertBefore;
 
   klass.prototype.insertBefore = function(childPos, newChild) {
     if (shadowDOM) {
@@ -72,16 +83,16 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
     }
 
     if (this.runUpdate) {
-      var newVnode = this.render();
+      let newVnode = this.render(this.state);
       // enable normal DOM API before patch
       shadowDOM = false;
-      var oldVnodeWrapper = {
+      let oldVnodeWrapper = {
         sel: this.getTagName(),
         elm: this,
         data: {},
         children: Array.isArray(this.oldVnode) ? this.oldVnode : [this.oldVnode]
       };
-      var newVnodeWrapper = {
+      let newVnodeWrapper = {
         sel: this.getTagName(),
         elm: undefined,
         data: {},
@@ -94,7 +105,7 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
       this.oldVnode = newVnode;
 
       // throw event
-      var afterUpdate = document.createEvent("Event");
+      let afterUpdate = document.createEvent("Event");
       afterUpdate.initEvent("after-update", true, true);
       // wait for element being added to DOM
       // TODO: put on queue until this is added to DOM
@@ -131,7 +142,16 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
     };
   }
 
-  if(!klass.prototype["patchState"]) {
+  if (!klass.prototype["streamState"]) {
+    klass.prototype["streamState"] = function(streamState) {
+      this.state = streamState;
+      this.localMirror = fm.mirror(() => {
+        this.update();
+      });
+    };
+  }
+
+  if (!klass.prototype["patchState"]) {
     klass.prototype["patchState"] = function(newState) {
       this.state = Object["assign"]({}, this.state, newState);
       this.update();

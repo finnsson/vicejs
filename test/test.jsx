@@ -1,4 +1,4 @@
-import vice from '../index';
+import {vice, viceView} from '../index';
 
 import reg from 'document-register-element/build/document-register-element.max';
 
@@ -13,9 +13,17 @@ import snabbdomState from '../modules/state';
 import snabbdomCustomElement from '../modules/customElement';
 import snabbdomElms from '../modules/elms';
 
-import h from 'snabbdom/h';
+import flyd from "flyd";
 
-var patch = snabbdom.init([snabbdomClass, snabbdomAttributes, snabbdomProps, snabbdomStyle, snabbdomEvent, snabbdomState, snabbdomCustomElement, snabbdomElms]);
+import fm from "flyd-mirror";
+
+import chai from "chai";
+// import mocha from "mocha";
+
+var assert = chai.assert;
+
+// babel-snabbdom-jsx demands a "h"
+var h = require('snabbdom/h');
 
 // shim for Safari where typeof HTMLElement is "object"
 if (typeof HTMLElement !== 'function') {
@@ -24,59 +32,165 @@ if (typeof HTMLElement !== 'function') {
   HTMLElement = _HTMLElement;
 }
 
-class FooBar extends HTMLElement {
-  changeName() {
-    this.setState({
-      name: "Pelle"
-    });
-  }
+// create body element in html element
+var bodyElm = document.createElement("body");
+document.children[0].appendChild(bodyElm);
 
-  render() {
-    return <div class="foo-bar" on-click={this.changeName.bind(this)}>
-        <span>{this.state.name}</span>
-        <div class="children" elms_={this.innerChildNodes || []} style="font-size: 14px;"></div>
-      </div>;
-  }
+// create div placeholder in body element
+var vicejsDom = document.createElement("div");
+bodyElm.appendChild(vicejsDom);
 
-  createdCallback() {
-    this.state = this.state || {
-      name: "Arne"
+describe('vicejs', () => {
+
+  var patch;
+
+  beforeEach(() => {
+    patch = snabbdom.init([
+      snabbdomClass,
+      snabbdomAttributes,
+      snabbdomProps,
+      snabbdomStyle,
+      snabbdomEvent,
+      snabbdomState,
+      snabbdomElms
+    ]);
+    vicejsDom.innerHTML = '';
+  });
+
+  afterEach(() => {
+    vicejsDom.innerHTML = '';
+  })
+
+  it('creates a custom element', () => {
+    assert.equal(5, 5);
+    var isCreated = false;
+    class FooBar {
+      createdCallback() {
+        isCreated = true;
+      }
+    }
+    vice(FooBar, patch, "foo-bar");
+    vicejsDom.innerHTML = "<foo-bar></foo-bar>";
+
+    assert.equal(isCreated, true);
+  });
+
+  it('renders a template', () => {
+    class FooBar2 extends HTMLElement {
+      render() {
+        return <ul>
+          <li>1</li>
+        </ul>;
+      }
+
+      createdCallback() {
+        this.update();
+      }
+    }
+    vice(FooBar2, patch, "foo-bar2");
+    vicejsDom.innerHTML = "<foo-bar2 instant=''></foo-bar2>";
+
+    assert.equal(vicejsDom.innerHTML, "<foo-bar2 instant=\"\"><ul><li>1</li></ul></foo-bar2>");
+  });
+
+  it('renders a template in a sub custom element', () => {
+    // initial state
+    var state = {
+      items: ["Yay", "Nay"]
     };
-    this.update();
-  }
-}
+    // TODO: create element
+    class FooBar3 extends HTMLElement {
+      render() {
+        return <foo-bar4 state_={state}></foo-bar4>;
+      }
+    }
+    vice(FooBar3, patch, "foo-bar3");
+    // TODO: create element with render depending on state
+    class FooBar4 extends HTMLElement {
+      render(state) {
+        return <ul>
+          {this.state.items.map(i => <li>{i}</li>)}
+        </ul>;
+      }
+    }
+    vice(FooBar4, patch, "foo-bar4");
+    vicejsDom.innerHTML = "<foo-bar3 instant=''></foo-bar3>";
 
-var FooBarTag = vice(FooBar, patch, "foo-bar");
+    var foobar3Element = vicejsDom.children[0];
+    assert.equal(foobar3Element.nodeName, "FOO-BAR3");
 
-class Dog extends HTMLElement {
-  bark() {
-    alert("bark!");
-  }
+    var foobar4Element = foobar3Element.children[0];
+    assert.equal(foobar4Element.nodeName, "FOO-BAR4");
 
-  render() {
-    return <div on-click={this.bark}>{this.getAttribute("name")}</div>;
-  }
-}
+    var ulElm = foobar4Element.children[0];
+    assert.equal(ulElm.nodeName, "UL");
 
-var Dogtag = vice(Dog, patch, "x-dog");
+    var liElms = ulElm.children;
+    assert.equal(liElms.length, 2);
 
-document.addEventListener("DOMContentLoaded", function(event) {
+    var yayElm = liElms[1];
+    assert.equal(yayElm.textContent, "Nay");
+  });
 
-  var state = {
-    name: "Some name from inline JSON"
-  };
+  it('updates the rendered template automatically when flyd-streams change', () => {
+    // initial state
+    var state = {
+      items: flyd.stream(["Yay", "Nay"])
+    };
+    var fooBar5RenderCount = 0;
+    var fooBar6RenderCount = 0;
+    class FooBar5 extends HTMLElement {
+      render(state) {
+        fooBar5RenderCount++;
+        return <foo-bar6 state_={state}></foo-bar6>;
+      }
 
-  var testFooBar2 = <FooBarTag class="test" state_={state} style="font-size: 22px;">
-      <ul>
-        <li>item 1</li>
-        <li>item 2</li>
-      </ul>
-    </FooBarTag>;
+      createdCallback() {
+        this.streamState(fm.image(state));
+      }
+    }
+    vice(FooBar5, patch, "foo-bar5");
 
-  var testEl = document.getElementById("test");
+    class FooBar6 extends HTMLElement {
+      render(state) {
+        fooBar6RenderCount++;
+        return <ul>
+          <li>{state.items[0]}</li>
+          <li>{state.items[1]}</li>
+        </ul>;
+      }
+    }
+    vice(FooBar6, patch, "foo-bar6");
 
-  var dog = <x-dog name="Doggy"></x-dog>;
+    vicejsDom.innerHTML = "<foo-bar5 instant=''></foo-bar5>";
 
-  patch(testEl, dog);
+    var foobar3Element = vicejsDom.children[0];
+    assert.equal(foobar3Element.nodeName, "FOO-BAR5");
+
+    var foobar4Element = foobar3Element.children[0];
+    assert.equal(foobar4Element.nodeName, "FOO-BAR6");
+
+    var ulElm = foobar4Element.children[0];
+    assert.equal(ulElm.nodeName, "UL");
+
+    var liElms = ulElm.children;
+    assert.equal(liElms.length, 2);
+
+    var yayElm = liElms[1];
+    assert.equal(yayElm.textContent, "Nay");
+    assert.equal(fooBar5RenderCount, 1, "foo-bar5 should be rendered one time initially");
+    assert.equal(fooBar6RenderCount, 1, "foo-bar6 should be rendered one time initially");
+
+    state.items(["Ja", "Nej"]);
+
+    var newLiElms = ulElm.children;
+    assert.equal(newLiElms.length, 2);
+
+    assert.equal(newLiElms[0].textContent, "Ja");
+    assert.equal(newLiElms[1].textContent, "Nej");
+
+    assert.equal(fooBar5RenderCount, 1, "foo-bar5 should be rendered one time");
+    assert.equal(fooBar6RenderCount, 2, "foo-bar6 should be rendered two times");
+  });
 
 });
