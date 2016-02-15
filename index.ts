@@ -144,10 +144,16 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
 
   if (!klass.prototype["streamState"]) {
     klass.prototype["streamState"] = function(streamState) {
+      if (klass.prototype["beforeStreamState"]) {
+        klass.prototype["beforeStreamState"].call(this, streamState);
+      }
       this.state = streamState;
       this.localMirror = fm.mirror(() => {
         this.update();
       });
+      if (klass.prototype["afterStreamState"]) {
+        klass.prototype["afterStreamState"].call(this, streamState);
+      }
     };
   }
 

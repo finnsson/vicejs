@@ -110,10 +110,16 @@ define(["require", "exports", "snabbdom/h", "flyd-mirror"], function (require, e
         if (!klass.prototype["streamState"]) {
             klass.prototype["streamState"] = function (streamState) {
                 var _this = this;
+                if (klass.prototype["beforeStreamState"]) {
+                    klass.prototype["beforeStreamState"].call(this, streamState);
+                }
                 this.state = streamState;
                 this.localMirror = fm.mirror(function () {
                     _this.update();
                 });
+                if (klass.prototype["afterStreamState"]) {
+                    klass.prototype["afterStreamState"].call(this, streamState);
+                }
             };
         }
         if (!klass.prototype["patchState"]) {
