@@ -155,8 +155,8 @@ describe('vicejs', () => {
       render(state) {
         fooBar6RenderCount++;
         return <ul>
-          <li>{state.items[0]}</li>
-          <li>{state.items[1]}</li>
+          <li>{state.items()[0]}</li>
+          <li>{state.items()[1]}</li>
         </ul>;
       }
     }
