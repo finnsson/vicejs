@@ -1,21 +1,11 @@
-define(["require", "exports", "snabbdom/h", "flyd-mirror"], function (require, exports, h, fm) {
+define(["require", "exports", "flyd"], function (require, exports, flyd) {
     "use strict";
-    var tagCounter = 1;
     if (typeof HTMLElement !== "function") {
         var _HTMLElement = function () { };
         _HTMLElement.prototype = HTMLElement.prototype;
         window["HTMLElement"] = _HTMLElement;
     }
-    exports.viceView = {
-        createElement: function (tag, attributes, children) {
-            console.error(arguments);
-            return h(tag, attributes, children);
-        }
-    };
     function vice(klass, patch, tagName) {
-        if (!tagName) {
-            tagName = "x-vice-" + tagCounter++;
-        }
         var shadowDOM = true;
         var appendChild = klass.prototype.appendChild;
         klass.prototype.appendChild = function (child) {
@@ -114,7 +104,7 @@ define(["require", "exports", "snabbdom/h", "flyd-mirror"], function (require, e
                     klass.prototype["beforeStreamState"].call(this, streamState);
                 }
                 this.state = streamState;
-                this.localMirror = fm.mirror(function () {
+                this.localMirror = flyd.autoFn(function () {
                     _this.update();
                 });
                 if (klass.prototype["afterStreamState"]) {

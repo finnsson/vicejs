@@ -1,10 +1,4 @@
-import * as h from "snabbdom/h";
-
 import * as flyd from "flyd";
-
-import * as fm from "flyd-mirror";
-
-let tagCounter = 1;
 
 if (typeof HTMLElement !== "function") {
   let _HTMLElement = function() {/* Intentionally empty */};
@@ -12,18 +6,7 @@ if (typeof HTMLElement !== "function") {
   window["HTMLElement"] = _HTMLElement;
 }
 
-export var viceView = {
-  createElement: function(tag: string, attributes: any, children: any[]) {
-    console.error(arguments);
-    return h(tag, attributes, children);
-  }
-};
-
-export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: string): K {
-
-  if (!tagName) {
-    tagName = "x-vice-" + tagCounter++;
-  }
+export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: string): K {
 
   // "Shadom DOM" for child elements.
   let shadowDOM = true;
@@ -125,11 +108,6 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
       this.innerChildNodes.push(this.firstChild);
       removeChild.call(this, this.firstChild);
     }
-    // temporary placeholder div.
-    /*
-    this.el = document.createElement("div");
-    appendChild.call(this, this.el);
-    */
   };
 
   if (!klass.prototype.setState) {
@@ -148,7 +126,7 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName?: st
         klass.prototype["beforeStreamState"].call(this, streamState);
       }
       this.state = streamState;
-      this.localMirror = fm.mirror(() => {
+      this.localMirror = flyd.autoFn(() => {
         this.update();
       });
       if (klass.prototype["afterStreamState"]) {

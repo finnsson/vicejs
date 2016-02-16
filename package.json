@@ -23,12 +23,11 @@
   "homepage": "https://github.com/finnsson/vicejs",
   "dependencies": {
     "document-register-element": "^0.5.4",
-    "flyd": "^0.2.1",
-    "flyd-mirror": "^0.7.0",
-    "snabbdom": "^0.3.3"
+    "flyd": "git+https://git@github.com:finnsson/flyd.git"
   },
   "typings": "index.d.ts",
   "devDependencies": {
+    "snabbdom": "^0.3.3",
     "babel-core": "^6.3.13",
     "babel-loader": "^6.2.0",
     "babel-plugin-syntax-jsx": "^6.3.13",

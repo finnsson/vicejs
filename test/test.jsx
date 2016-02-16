@@ -1,4 +1,4 @@
-import {vice, viceView} from '../index';
+import {vice} from '../index';
 
 import reg from 'document-register-element/build/document-register-element.max';
 
@@ -12,8 +12,6 @@ import snabbdomEvent from 'snabbdom/modules/eventlisteners';
 import snabbdomState from '../modules/state';
 import snabbdomCustomElement from '../modules/customElement';
 import snabbdomElms from '../modules/elms';
-
-import flyd from "flyd";
 
 import fm from "flyd-mirror";
 
@@ -146,7 +144,7 @@ describe('vicejs', () => {
       }
 
       createdCallback() {
-        this.streamState(fm.image(state));
+        this.streamState(state);
       }
     }
     vice(FooBar5, patch, "foo-bar5");
