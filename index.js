@@ -88,7 +88,7 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
             }
         };
         klass.prototype.init = function () {
-            this.runUpdate = this.getAttribute("instant") != null;
+            this.runUpdate = this.runUpdate || this.getAttribute("instant") != null;
             this.innerChildNodes = [];
             while (this.firstChild) {
                 this.innerChildNodes.push(this.firstChild);

@@ -106,7 +106,7 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
 
   klass.prototype.init = function() {
     // run update directly if instant attribute is set on element
-    this.runUpdate = this.getAttribute("instant") != null;
+    this.runUpdate = this.runUpdate || this.getAttribute("instant") != null;
 
     // remove all child nodes and place them in array
     this.innerChildNodes = [];
