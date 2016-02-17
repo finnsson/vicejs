@@ -60,6 +60,9 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
   };
 
   klass.prototype.update = function() {
+    if (this.beforeUpdate) {
+      this.beforeUpdate();
+    }
     if (!this._isInitialized) {
       this.init();
       this._isInitialized = true;
@@ -96,6 +99,9 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
         this.dispatchEvent(afterUpdate);
       });
     }
+    if (this.afterUpdate) {
+      this.afterUpdate();
+    }
   };
 
   klass.prototype.init = function() {
@@ -110,18 +116,17 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
     }
   };
 
-  if (!klass.prototype.setState) {
-    klass.prototype.setState = function(newState) {
-      // default to immutable state management
-      if (newState !== this.state) {
-        this.state = newState;
-        this.update();
-      }
-    };
-  }
-
   if (!klass.prototype["streamState"]) {
     klass.prototype["streamState"] = function(streamState) {
+      this.runUpdate = true;
+      if (this.state === streamState) {
+        // do nothing
+        return;
+      }
+      if (this.localMirror && this.localMirror.end) {
+        // kill present autoFn
+        this.localMirror.end(true);
+      }
       if (klass.prototype["beforeStreamState"]) {
         klass.prototype["beforeStreamState"].call(this, streamState);
       }
@@ -135,29 +140,9 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
     };
   }
 
-  if (!klass.prototype["patchState"]) {
-    klass.prototype["patchState"] = function(newState) {
-      this.state = Object["assign"]({}, this.state, newState);
-      this.update();
-    };
-  }
-
-  // default implementation
-  if (!klass.prototype.createdCallback) {
-    klass.prototype.createdCallback = function() {
-      this.update();
-    };
-  }
-
   klass.prototype["hasShadow"] = function(has: boolean) {
     shadowDOM = has;
   };
-
-  if (!klass.prototype.attributeChangedCallback) {
-    klass.prototype.attributeChangedCallback = function(attributeName, oldValue, newValue) {
-      this.update();
-    };
-  }
 
   document.registerElement(tagName, klass);
 

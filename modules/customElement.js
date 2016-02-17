@@ -3,8 +3,8 @@ define(["require", "exports"], function (require, exports) {
     function createCustomElement(emptyVnode, vnode) {
         var tagName = vnode.sel.split(/[\.#]/)[0];
         if (tagName.indexOf("-") !== -1) {
-            vnode.elm.runUpdate = true;
-            if (vnode.elm.update) {
+            if (!vnode.elm._isInitialized && vnode.elm.update) {
+                vnode.elm.runUpdate = true;
                 vnode.elm.update();
             }
         }

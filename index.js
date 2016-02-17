@@ -52,6 +52,9 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
         };
         klass.prototype.update = function () {
             var _this = this;
+            if (this.beforeUpdate) {
+                this.beforeUpdate();
+            }
             if (!this._isInitialized) {
                 this.init();
                 this._isInitialized = true;
@@ -80,6 +83,9 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
                     _this.dispatchEvent(afterUpdate_1);
                 });
             }
+            if (this.afterUpdate) {
+                this.afterUpdate();
+            }
         };
         klass.prototype.init = function () {
             this.runUpdate = this.getAttribute("instant") != null;
@@ -89,17 +95,16 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
                 removeChild.call(this, this.firstChild);
             }
         };
-        if (!klass.prototype.setState) {
-            klass.prototype.setState = function (newState) {
-                if (newState !== this.state) {
-                    this.state = newState;
-                    this.update();
-                }
-            };
-        }
         if (!klass.prototype["streamState"]) {
             klass.prototype["streamState"] = function (streamState) {
                 var _this = this;
+                this.runUpdate = true;
+                if (this.state === streamState) {
+                    return;
+                }
+                if (this.localMirror && this.localMirror.end) {
+                    this.localMirror.end(true);
+                }
                 if (klass.prototype["beforeStreamState"]) {
                     klass.prototype["beforeStreamState"].call(this, streamState);
                 }
@@ -112,25 +117,9 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
                 }
             };
         }
-        if (!klass.prototype["patchState"]) {
-            klass.prototype["patchState"] = function (newState) {
-                this.state = Object["assign"]({}, this.state, newState);
-                this.update();
-            };
-        }
-        if (!klass.prototype.createdCallback) {
-            klass.prototype.createdCallback = function () {
-                this.update();
-            };
-        }
         klass.prototype["hasShadow"] = function (has) {
             shadowDOM = has;
         };
-        if (!klass.prototype.attributeChangedCallback) {
-            klass.prototype.attributeChangedCallback = function (attributeName, oldValue, newValue) {
-                this.update();
-            };
-        }
         document.registerElement(tagName, klass);
         return klass;
     }
