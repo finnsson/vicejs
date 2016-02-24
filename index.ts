@@ -128,14 +128,18 @@ export function vice<K extends typeof HTMLElement>(klass: K, patch, tagName: str
         this.localMirror.end(true);
       }
       if (klass.prototype["beforeStreamState"]) {
-        klass.prototype["beforeStreamState"].call(this, streamState);
+        flyd.autoOut(() => {
+          klass.prototype["beforeStreamState"].call(this, streamState);
+        });
       }
       this.state = streamState;
       this.localMirror = flyd.autoFn(() => {
         this.update();
       });
       if (klass.prototype["afterStreamState"]) {
-        klass.prototype["afterStreamState"].call(this, streamState);
+        flyd.autoOut(() => {
+          klass.prototype["afterStreamState"].call(this, streamState);
+        });
       }
     };
   }

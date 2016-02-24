@@ -106,14 +106,18 @@ define(["require", "exports", "flyd"], function (require, exports, flyd) {
                     this.localMirror.end(true);
                 }
                 if (klass.prototype["beforeStreamState"]) {
-                    klass.prototype["beforeStreamState"].call(this, streamState);
+                    flyd.autoOut(function () {
+                        klass.prototype["beforeStreamState"].call(_this, streamState);
+                    });
                 }
                 this.state = streamState;
                 this.localMirror = flyd.autoFn(function () {
                     _this.update();
                 });
                 if (klass.prototype["afterStreamState"]) {
-                    klass.prototype["afterStreamState"].call(this, streamState);
+                    flyd.autoOut(function () {
+                        klass.prototype["afterStreamState"].call(_this, streamState);
+                    });
                 }
             };
         }

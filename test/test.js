@@ -50,57 +50,55 @@
 
 	var _index = __webpack_require__(1);
 
-	var _documentRegisterElement = __webpack_require__(12);
+	var _documentRegisterElement = __webpack_require__(8);
 
 	var _documentRegisterElement2 = _interopRequireDefault(_documentRegisterElement);
 
-	var _snabbdom = __webpack_require__(13);
+	var _snabbdom = __webpack_require__(9);
 
 	var _snabbdom2 = _interopRequireDefault(_snabbdom);
 
-	var _class = __webpack_require__(14);
+	var _class = __webpack_require__(12);
 
 	var _class2 = _interopRequireDefault(_class);
 
-	var _attributes = __webpack_require__(15);
+	var _attributes = __webpack_require__(13);
 
 	var _attributes2 = _interopRequireDefault(_attributes);
 
-	var _props = __webpack_require__(16);
+	var _props = __webpack_require__(14);
 
 	var _props2 = _interopRequireDefault(_props);
 
-	var _style = __webpack_require__(17);
+	var _style = __webpack_require__(15);
 
 	var _style2 = _interopRequireDefault(_style);
 
-	var _eventlisteners = __webpack_require__(18);
+	var _eventlisteners = __webpack_require__(16);
 
 	var _eventlisteners2 = _interopRequireDefault(_eventlisteners);
 
-	var _state = __webpack_require__(19);
+	var _state = __webpack_require__(17);
 
 	var _state2 = _interopRequireDefault(_state);
 
-	var _customElement = __webpack_require__(20);
+	var _customElement = __webpack_require__(18);
 
 	var _customElement2 = _interopRequireDefault(_customElement);
 
-	var _elms = __webpack_require__(21);
+	var _elms = __webpack_require__(19);
 
 	var _elms2 = _interopRequireDefault(_elms);
 
-	var _flyd = __webpack_require__(22);
+	var _flyd = __webpack_require__(2);
 
-	var _flyd2 = _interopRequireDefault(_flyd);
+	var flyd = _interopRequireWildcard(_flyd);
 
-	var _flydMirror = __webpack_require__(5);
-
-	var _flydMirror2 = _interopRequireDefault(_flydMirror);
-
-	var _chai = __webpack_require__(23);
+	var _chai = __webpack_require__(20);
 
 	var _chai2 = _interopRequireDefault(_chai);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -115,7 +113,7 @@
 	var assert = _chai2.default.assert;
 
 	// babel-snabbdom-jsx demands a "h"
-	var h = __webpack_require__(2);
+	var h = __webpack_require__(60);
 
 	// shim for Safari where typeof HTMLElement is "object"
 	if (typeof HTMLElement !== 'function') {
@@ -211,10 +209,9 @@
 
 	  it('renders a template in a sub custom element', function () {
 	    // initial state
-	    var state = {
+	    var outerState = {
 	      items: ["Yay", "Nay"]
 	    };
-	    // TODO: create element
 
 	    var FooBar3 = function (_HTMLElement3) {
 	      _inherits(FooBar3, _HTMLElement3);
@@ -227,10 +224,15 @@
 
 	      _createClass(FooBar3, [{
 	        key: 'render',
-	        value: function render() {
+	        value: function render(state) {
 	          return h('foo-bar4', {
 	            state: state
 	          });
+	        }
+	      }, {
+	        key: 'createdCallback',
+	        value: function createdCallback(state) {
+	          this.streamState(outerState);
 	        }
 	      }]);
 
@@ -238,7 +240,6 @@
 	    }(HTMLElement);
 
 	    (0, _index.vice)(FooBar3, patch, "foo-bar3");
-	    // TODO: create element with render depending on state
 
 	    var FooBar4 = function (_HTMLElement4) {
 	      _inherits(FooBar4, _HTMLElement4);
@@ -255,7 +256,7 @@
 	          return h(
 	            'ul',
 	            {},
-	            [].concat(this.state.items.map(function (i) {
+	            [].concat(state.items.map(function (i) {
 	              return h(
 	                'li',
 	                {},
@@ -270,31 +271,21 @@
 	    }(HTMLElement);
 
 	    (0, _index.vice)(FooBar4, patch, "foo-bar4");
-	    vicejsDom.innerHTML = "<foo-bar3 instant=''></foo-bar3>";
+	    vicejsDom.innerHTML = '<foo-bar3 instant=""></foo-bar3>';
 
-	    var foobar3Element = vicejsDom.children[0];
-	    assert.equal(foobar3Element.nodeName, "FOO-BAR3");
-
-	    var foobar4Element = foobar3Element.children[0];
-	    assert.equal(foobar4Element.nodeName, "FOO-BAR4");
-
-	    var ulElm = foobar4Element.children[0];
-	    assert.equal(ulElm.nodeName, "UL");
-
-	    var liElms = ulElm.children;
-	    assert.equal(liElms.length, 2);
-
-	    var yayElm = liElms[1];
-	    assert.equal(yayElm.textContent, "Nay");
+	    assert.include(vicejsDom.innerHTML, "Yay");
+	    assert.include(vicejsDom.innerHTML, "Nay");
 	  });
 
 	  it('updates the rendered template automatically when flyd-streams change', function () {
 	    // initial state
 	    var state = {
-	      items: _flyd2.default.stream(["Yay", "Nay"])
+	      items: flyd.stream(["Yay", "Nay"]),
+	      bogus: flyd.stream(1)
 	    };
 	    var fooBar5RenderCount = 0;
 	    var fooBar6RenderCount = 0;
+	    var fooBar7RenderCount = 0;
 
 	    var FooBar5 = function (_HTMLElement5) {
 	      _inherits(FooBar5, _HTMLElement5);
@@ -316,7 +307,7 @@
 	      }, {
 	        key: 'createdCallback',
 	        value: function createdCallback() {
-	          this.streamState(_flydMirror2.default.image(state));
+	          this.streamState(state);
 	        }
 	      }]);
 
@@ -324,6 +315,8 @@
 	    }(HTMLElement);
 
 	    (0, _index.vice)(FooBar5, patch, "foo-bar5");
+
+	    var beforeStreamState6Count = 0;
 
 	    var FooBar6 = function (_HTMLElement6) {
 	      _inherits(FooBar6, _HTMLElement6);
@@ -338,19 +331,28 @@
 	        key: 'render',
 	        value: function render(state) {
 	          fooBar6RenderCount++;
-	          return h(
+	          return [h(
 	            'ul',
 	            {},
 	            [].concat(h(
 	              'li',
 	              {},
-	              [].concat(state.items[0])
+	              [].concat(state.items()[0])
 	            ), h(
 	              'li',
 	              {},
-	              [].concat(state.items[1])
+	              [].concat(state.items()[1])
 	            ))
-	          );
+	          ), h('foo-bar7', {
+	            state: state
+	          })];
+	        }
+	      }, {
+	        key: 'beforeStreamState',
+	        value: function beforeStreamState(state) {
+	          // access bogus
+	          beforeStreamState6Count++;
+	          state.bogus();
 	        }
 	      }]);
 
@@ -359,7 +361,43 @@
 
 	    (0, _index.vice)(FooBar6, patch, "foo-bar6");
 
+	    var beforeStreamState7Count = 0;
+
+	    var FooBar7 = function (_HTMLElement7) {
+	      _inherits(FooBar7, _HTMLElement7);
+
+	      function FooBar7() {
+	        _classCallCheck(this, FooBar7);
+
+	        return _possibleConstructorReturn(this, Object.getPrototypeOf(FooBar7).apply(this, arguments));
+	      }
+
+	      _createClass(FooBar7, [{
+	        key: 'render',
+	        value: function render(state) {
+	          fooBar7RenderCount++;
+	          return h(
+	            'a',
+	            {},
+	            [].concat('test')
+	          );
+	        }
+	      }, {
+	        key: 'beforeStreamState',
+	        value: function beforeStreamState(state) {
+	          beforeStreamState7Count++;
+	          state.bogus();
+	        }
+	      }]);
+
+	      return FooBar7;
+	    }(HTMLElement);
+
+	    (0, _index.vice)(FooBar7, patch, "foo-bar7");
+
 	    vicejsDom.innerHTML = "<foo-bar5 instant=''></foo-bar5>";
+
+	    assert.include(vicejsDom.innerHTML, "foo-bar6");
 
 	    var foobar3Element = vicejsDom.children[0];
 	    assert.equal(foobar3Element.nodeName, "FOO-BAR5");
@@ -388,6 +426,14 @@
 
 	    assert.equal(fooBar5RenderCount, 1, "foo-bar5 should be rendered one time");
 	    assert.equal(fooBar6RenderCount, 2, "foo-bar6 should be rendered two times");
+
+	    // update bogus - should not trigger render
+	    state.bogus(10);
+
+	    assert.equal(fooBar5RenderCount, 1, "foo-bar5 should still be rendered one time");
+	    assert.equal(fooBar6RenderCount, 2, "foo-bar6 should still be rendered two times");
+
+	    assert.equal(fooBar7RenderCount, 1, "foo-bar7 should be rendered one time");
 	  });
 	});
 
@@ -397,25 +443,15 @@
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
 
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(2), __webpack_require__(5)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, h, fm) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__, exports, __webpack_require__(2)], __WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, flyd) {
 	    "use strict";
 
-	    var tagCounter = 1;
 	    if (typeof HTMLElement !== "function") {
 	        var _HTMLElement = function _HTMLElement() {};
 	        _HTMLElement.prototype = HTMLElement.prototype;
 	        window["HTMLElement"] = _HTMLElement;
 	    }
-	    exports.viceView = {
-	        createElement: function createElement(tag, attributes, children) {
-	            console.error(arguments);
-	            return h(tag, attributes, children);
-	        }
-	    };
 	    function vice(klass, patch, tagName) {
-	        if (!tagName) {
-	            tagName = "x-vice-" + tagCounter++;
-	        }
 	        var shadowDOM = true;
 	        var appendChild = klass.prototype.appendChild;
 	        klass.prototype.appendChild = function (child) {
@@ -458,6 +494,9 @@
 	        };
 	        klass.prototype.update = function () {
 	            var _this = this;
+	            if (this.beforeUpdate) {
+	                this.beforeUpdate();
+	            }
 	            if (!this._isInitialized) {
 	                this.init();
 	                this._isInitialized = true;
@@ -486,51 +525,47 @@
 	                    _this.dispatchEvent(afterUpdate_1);
 	                });
 	            }
+	            if (this.afterUpdate) {
+	                this.afterUpdate();
+	            }
 	        };
 	        klass.prototype.init = function () {
-	            this.runUpdate = this.getAttribute("instant") != null;
+	            this.runUpdate = this.runUpdate || this.getAttribute("instant") != null;
 	            this.innerChildNodes = [];
 	            while (this.firstChild) {
 	                this.innerChildNodes.push(this.firstChild);
 	                removeChild.call(this, this.firstChild);
 	            }
 	        };
-	        if (!klass.prototype.setState) {
-	            klass.prototype.setState = function (newState) {
-	                if (newState !== this.state) {
-	                    this.state = newState;
-	                    this.update();
-	                }
-	            };
-	        }
 	        if (!klass.prototype["streamState"]) {
 	            klass.prototype["streamState"] = function (streamState) {
 	                var _this = this;
+	                this.runUpdate = true;
+	                if (this.state === streamState) {
+	                    return;
+	                }
+	                if (this.localMirror && this.localMirror.end) {
+	                    this.localMirror.end(true);
+	                }
+	                if (klass.prototype["beforeStreamState"]) {
+	                    flyd.autoOut(function () {
+	                        klass.prototype["beforeStreamState"].call(_this, streamState);
+	                    });
+	                }
 	                this.state = streamState;
-	                var localMirror = fm.mirror(function () {
+	                this.localMirror = flyd.autoFn(function () {
 	                    _this.update();
 	                });
-	            };
-	        }
-	        if (!klass.prototype["patchState"]) {
-	            klass.prototype["patchState"] = function (newState) {
-	                this.state = Object["assign"]({}, this.state, newState);
-	                this.update();
-	            };
-	        }
-	        if (!klass.prototype.createdCallback) {
-	            klass.prototype.createdCallback = function () {
-	                this.update();
+	                if (klass.prototype["afterStreamState"]) {
+	                    flyd.autoOut(function () {
+	                        klass.prototype["afterStreamState"].call(_this, streamState);
+	                    });
+	                }
 	            };
 	        }
 	        klass.prototype["hasShadow"] = function (has) {
 	            shadowDOM = has;
 	        };
-	        if (!klass.prototype.attributeChangedCallback) {
-	            klass.prototype.attributeChangedCallback = function (attributeName, oldValue, newValue) {
-	                this.update();
-	            };
-	        }
 	        document.registerElement(tagName, klass);
 	        return klass;
 	    }
@@ -543,503 +578,44 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var VNode = __webpack_require__(3);
-	var is = __webpack_require__(4);
-
-	function addNS(data, children) {
-	  data.ns = 'http://www.w3.org/2000/svg';
-	  if (children !== undefined) {
-	    for (var i = 0; i < children.length; ++i) {
-	      addNS(children[i].data, children[i].children);
-	    }
-	  }
-	}
-
-	module.exports = function h(sel, b, c) {
-	  var data = {}, children, text, i;
-	  if (arguments.length === 3) {
-	    data = b;
-	    if (is.array(c)) { children = c; }
-	    else if (is.primitive(c)) { text = c; }
-	  } else if (arguments.length === 2) {
-	    if (is.array(b)) { children = b; }
-	    else if (is.primitive(b)) { text = b; }
-	    else { data = b; }
-	  }
-	  if (is.array(children)) {
-	    for (i = 0; i < children.length; ++i) {
-	      if (is.primitive(children[i])) children[i] = VNode(undefined, undefined, undefined, children[i]);
-	    }
-	  }
-	  if (sel[0] === 's' && sel[1] === 'v' && sel[2] === 'g') {
-	    addNS(data, children);
-	  }
-	  return VNode(sel, data, children, text, undefined);
-	};
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
-
-	module.exports = function(sel, data, children, text, elm) {
-	  var key = data === undefined ? undefined : data.key;
-	  return {sel: sel, data: data, children: children,
-	          text: text, elm: elm, key: key};
-	};
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	module.exports = {
-	  array: Array.isArray,
-	  primitive: function(s) { return typeof s === 'string' || typeof s === 'number'; },
-	};
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var flyd = __webpack_require__(6);
-
-	var fmirror = {};
-
-	var currentAutoStreamFn;
-	var autoStreamFnStack = [];
-
-	/**
-	 * @private
-	 * copy from flyd
-	 */
-	function removeListener(s, listeners) {
-	  var idx = listeners.indexOf(s);
-	  listeners[idx] = listeners[listeners.length - 1];
-	  listeners.length--;
-	}
-
-	/**
-	 * @private
-	 * copy from flyd
-	 */
-	function detachDeps(s) {
-	  for (var i = 0; i < s.deps.length; ++i) {
-	    removeListener(s, s.deps[i].listeners);
-	  }
-	  s.deps.length = 0;
-	}
-
-	/**
-	 * @private
-	 */
-	function attachDeps(s) {
-	  var deps = s.deps;
-	  for (var i = 0; i < deps.length; ++i) {
-	    deps[i].listeners.push(s);
-	  }
-	}
-
-	/**
-	 * Creates a new mirror
-	 *
-	 * __Signature__: `(() -> a) -> Stream a`
-	 *
-	 * @name flyd-mirror.mirror
-	 * @param {Function} fn - the function to run every time a dependency is updated
-	 * @return {stream} the stream
-	 *
-	 * @example
-	 * var data = {a: flyd.stream(2)};
-	 * var image = fm.image(data);
-	 * var sqMirror = fm.mirror(function() { return data.a*data*a; });
-	 */
-	fmirror.mirror = function(fn) {
-	  var thisStream = flyd.stream();
-	  thisStream.deps = [];
-	  thisStream.end.deps = [];
-
-	  function updateListeners() {
-	    currentAutoStreamFn = thisStream;
-	    autoStreamFnStack.push(thisStream);
-	    // clear all triggers / listeners
-	    detachDeps(thisStream);
-	    detachDeps(thisStream.end);
-	    // rerun fn and collect triggers / listeners
-	    var result = fn();
-	    attachDeps(thisStream);
-	    attachDeps(thisStream.end);
-	    // reset currentAutoStreamFn
-	    autoStreamFnStack.pop();
-	    currentAutoStreamFn = autoStreamFnStack[autoStreamFnStack.length - 1]; // last item
-	    thisStream(result);
-	  }
-	  thisStream.fn = updateListeners;
-	  updateListeners();
-
-	  return thisStream;
-	};
-
-	function wrap(key, data, image) {
-	  if (key === "constructor" || key === "toString") {
-	    // noop
-	    return;
-	  }
-	  var value = data[key];
-	  if (!flyd.isStream(value) && typeof value === "function") {
-	    image[key] = function() {
-	      // TODO: do not use data as scope!
-	      return fmirror.image(value.apply(this._$_, arguments));
-	    }
-	  } else {
-	    Object.defineProperty(image, key, {
-	      get: function() {
-	        var result = value;
-	        return fmirror.image(result);
-	      },
-	      enumerable: true
-	    });
-	  }
-	}
-
-	var classImages = {};
-
-	var __extends = (this && this.__extends) || function(d, b) {
-	  for (var p in b)
-	    if (b.hasOwnProperty(p)) d[p] = b[p];
-
-	  function __() {
-	    this.constructor = d;
-	  }
-	  d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-
-	function getImageClass(data) {
-	  var proto = Object.getPrototypeOf(data);
-	  if (proto == RegExp.prototype) {
-	    return data.constructor;
-	  } else if (proto === Object.prototype) {
-	    // do nothing
-	    return data.constructor;
-	  } else if (proto === Function.prototype) {
-	    // do nothing
-	    return data.constructor;
-	  } else if (classImages[proto]) {
-	    return classImages[proto];
-	  } else {
-	    // should be custom prototype. Wrap own properties in recursion
-	    var ImageClass = getImageClass(proto);
-	    var Image = (function(_super) {
-	      __extends(Image, _super);
-
-	      function Image() {
-	        _super.apply(this, arguments);
-	      }
-	      return Image;
-	    })(ImageClass);
-	    /*
-	    let Image = function() {
-	      ImageClass.call(this);
-	    };
-	    Image.prototype = new ImageClass();
-	    */
-	    Object.getOwnPropertyNames(proto).forEach(function(key) {
-	      wrap(key, proto, Image.prototype);
-	    });
-	    classImages[proto] = Image;
-	    return Image;
-	  }
-	}
-
-	/**
-	 * Creates a new mirror
-	 *
-	 * __Signature__: `Stream a -> a`
-	 *
-	 * @name flyd-mirror.image
-	 * @param {stream} stream - the stream
-	 * @return {*} unwrapped data
-	 *
-	 * @example
-	 * var data = {a: flyd.stream(2)};
-	 * var image = fm.image(data);
-	 * var sq = image.a * image.b;
-	 */
-	fmirror.image = function(data) {
-	  // automatically unwrap streams
-	  while (flyd.isStream(data)) {
-	    var s = data;
-	    data = data();
-	    if (currentAutoStreamFn) {
-	      if (currentAutoStreamFn.deps.indexOf(s) === -1) {
-	        currentAutoStreamFn.deps.push(s);
-	        if (s.end) {
-	          currentAutoStreamFn.end.deps.push(s.end);
-	        }
-	      }
-	    }
-	  }
-	  // only image objects, not functions, primitives, etc
-	  if (typeof data !== "object") {
-	    return data;
-	  }
-	  var ImageClass = getImageClass(data);
-	  var image = new ImageClass();
-	  image._$_ = data;
-	  Object.getOwnPropertyNames(data).forEach(function(key) {
-	    wrap(key, data, image);
-	  });
-	  return image;
-	};
-
-	module.exports = fmirror;
-
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var curryN = __webpack_require__(7);
-
 	'use strict';
 
+	var curryN = __webpack_require__(3);
+
+	// Utility
 	function isFunction(obj) {
 	  return !!(obj && obj.constructor && obj.call && obj.apply);
 	}
+	function trueFn() { return true; }
 
 	// Globals
 	var toUpdate = [];
 	var inStream;
-
-	// Library functions use self callback to accept (null, undefined) update triggers.
-	function map(f, s) {
-	  return combine(function(s, self) { self(f(s.val)); }, [s]);
-	}
-
-	function on(f, s) {
-	  return combine(function(s) { f(s.val); }, [s]);
-	}
-
-	function boundMap(f) { return map(f, this); }
-
-	var scan = curryN(3, function(f, acc, s) {
-	  var ns = combine(function(s, self) {
-	    self(acc = f(acc, s.val));
-	  }, [s]);
-	  if (!ns.hasVal) ns(acc);
-	  return ns;
-	});
-
-	var merge = curryN(2, function(s1, s2) {
-	  var s = immediate(combine(function(s1, s2, self, changed) {
-	    if (changed[0]) {
-	      self(changed[0]());
-	    } else if (s1.hasVal) {
-	      self(s1.val);
-	    } else if (s2.hasVal) {
-	      self(s2.val);
-	    }
-	  }, [s1, s2]));
-	  endsOn(combine(function() {
-	    return true;
-	  }, [s1.end, s2.end]), s);
-	  return s;
-	});
-
-	function ap(s2) {
-	  var s1 = this;
-	  return combine(function(s1, s2, self) { self(s1.val(s2.val)); }, [s1, s2]);
-	}
-
-	function initialDepsNotMet(stream) {
-	  stream.depsMet = stream.deps.every(function(s) {
-	    return s.hasVal;
-	  });
-	  return !stream.depsMet;
-	}
-
-	function updateStream(s) {
-	  if ((s.depsMet !== true && initialDepsNotMet(s)) ||
-	      (s.end !== undefined && s.end.val === true)) return;
-	  if (inStream !== undefined) {
-	    toUpdate.push(s);
-	    return;
-	  }
-	  inStream = s;
-	  if (s.depsChanged) s.fnArgs[s.fnArgs.length - 1] = s.depsChanged;
-	  var returnVal = s.fn.apply(s.fn, s.fnArgs);
-	  if (returnVal !== undefined) {
-	    s(returnVal);
-	  }
-	  inStream = undefined;
-	  if (s.depsChanged !== undefined) s.depsChanged = [];
-	  s.shouldUpdate = false;
-	  if (flushing === false) flushUpdate();
-	}
-
 	var order = [];
 	var orderNextIdx = -1;
-
-	function findDeps(s) {
-	  var i, listeners = s.listeners;
-	  if (s.queued === false) {
-	    s.queued = true;
-	    for (i = 0; i < listeners.length; ++i) {
-	      findDeps(listeners[i]);
-	    }
-	    order[++orderNextIdx] = s;
-	  }
-	}
-
-	function updateDeps(s) {
-	  var i, o, list, listeners = s.listeners;
-	  for (i = 0; i < listeners.length; ++i) {
-	    list = listeners[i];
-	    if (list.end === s) {
-	      endStream(list);
-	    } else {
-	      if (list.depsChanged !== undefined) list.depsChanged.push(s);
-	      list.shouldUpdate = true;
-	      findDeps(list);
-	    }
-	  }
-	  for (; orderNextIdx >= 0; --orderNextIdx) {
-	    o = order[orderNextIdx];
-	    if (o.shouldUpdate === true) updateStream(o);
-	    o.queued = false;
-	  }
-	}
-
 	var flushing = false;
+	var currentAutoStreamFn;
+	var autoStreamFnStack = [];
 
-	function flushUpdate() {
-	  flushing = true;
-	  while (toUpdate.length > 0) {
-	    var s = toUpdate.shift();
-	    if (s.vals.length > 0) s.val = s.vals.shift();
-	    updateDeps(s);
-	  }
-	  flushing = false;
-	}
+	/** @namespace */
+	var flyd = {}
 
-	function isStream(stream) {
-	  return isFunction(stream) && 'hasVal' in stream;
-	}
+	// /////////////////////////// API ///////////////////////////////// //
 
-	function streamToString() {
-	  return 'stream(' + this.val + ')';
-	}
-
-	function updateStreamValue(s, n) {
-	  if (n !== undefined && n !== null && isFunction(n.then)) {
-	    n.then(s);
-	    return;
-	  }
-	  s.val = n;
-	  s.hasVal = true;
-	  if (inStream === undefined) {
-	    flushing = true;
-	    updateDeps(s);
-	    if (toUpdate.length > 0) flushUpdate(); else flushing = false;
-	  } else if (inStream === s) {
-	    markListeners(s, s.listeners);
-	  } else {
-	    s.vals.push(n);
-	    toUpdate.push(s);
-	  }
-	}
-
-	function markListeners(s, lists) {
-	  var i, list;
-	  for (i = 0; i < lists.length; ++i) {
-	    list = lists[i];
-	    if (list.end !== s) {
-	      if (list.depsChanged !== undefined) {
-	        list.depsChanged.push(s);
-	      }
-	      list.shouldUpdate = true;
-	    } else {
-	      endStream(list);
-	    }
-	  }
-	}
-
-	function createStream() {
-	  function s(n) {
-	    return arguments.length > 0 ? (updateStreamValue(s, n), s)
-	                                : s.val;
-	  }
-	  s.hasVal = false;
-	  s.val = undefined;
-	  s.vals = [];
-	  s.listeners = [];
-	  s.queued = false;
-	  s.end = undefined;
-
-	  s.map = boundMap;
-	  s.ap = ap;
-	  s.of = stream;
-	  s.toString = streamToString;
-
-	  return s;
-	}
-
-	function addListeners(deps, s) {
-	  for (var i = 0; i < deps.length; ++i) {
-	    deps[i].listeners.push(s);
-	  }
-	}
-
-	function createDependentStream(deps, fn) {
-	  var s = createStream();
-	  s.fn = fn;
-	  s.deps = deps;
-	  s.depsMet = false;
-	  s.depsChanged = deps.length > 0 ? [] : undefined;
-	  s.shouldUpdate = false;
-	  addListeners(deps, s);
-	  return s;
-	}
-
-	function immediate(s) {
-	  if (s.depsMet === false) {
-	    s.depsMet = true;
-	    updateStream(s);
-	  }
-	  return s;
-	}
-
-	function removeListener(s, listeners) {
-	  var idx = listeners.indexOf(s);
-	  listeners[idx] = listeners[listeners.length - 1];
-	  listeners.length--;
-	}
-
-	function detachDeps(s) {
-	  for (var i = 0; i < s.deps.length; ++i) {
-	    removeListener(s, s.deps[i].listeners);
-	  }
-	  s.deps.length = 0;
-	}
-
-	function endStream(s) {
-	  if (s.deps !== undefined) detachDeps(s);
-	  if (s.end !== undefined) detachDeps(s.end);
-	}
-
-	function endsOn(endS, s) {
-	  detachDeps(s.end);
-	  endS.listeners.push(s.end);
-	  s.end.deps.push(endS);
-	  return s;
-	}
-
-	function trueFn() { return true; }
-
-	function stream(initialValue) {
+	/**
+	 * Creates a new stream
+	 *
+	 * __Signature__: `a -> Stream a`
+	 *
+	 * @name flyd.stream
+	 * @param {*} initialValue - (Optional) the initial value of the stream
+	 * @return {stream} the stream
+	 *
+	 * @example
+	 * var n = flyd.stream(1); // Stream with initial value `1`
+	 * var s = flyd.stream(); // Stream with no initial value
+	 */
+	flyd.stream = function(initialValue) {
 	  var endStream = createDependentStream([], trueFn);
 	  var s = createStream();
 	  s.end = endStream;
@@ -1049,6 +625,24 @@
 	  return s;
 	}
 
+	/**
+	 * Create a new dependent stream
+	 *
+	 * __Signature__: `(...Stream * -> Stream b -> b) -> [Stream *] -> Stream b`
+	 *
+	 * @name flyd.combine
+	 * @param {Function} fn - the function used to combine the streams
+	 * @param {Array<stream>} dependencies - the streams that this one depends on
+	 * @return {stream} the dependent stream
+	 *
+	 * @example
+	 * var n1 = flyd.stream(0);
+	 * var n2 = flyd.stream(0);
+	 * var max = flyd.combine(function(n1, n2, self, changed) {
+	 *   return n1() > n2() ? n1() : n2();
+	 * }, [n1, n2]);
+	 */
+	flyd.combine = curryN(2, combine);
 	function combine(fn, streams) {
 	  var i, s, deps, depEndStreams;
 	  var endStream = createDependentStream([], trueFn);
@@ -1070,7 +664,205 @@
 	  return s;
 	}
 
-	var transduce = curryN(2, function(xform, source) {
+	/**
+	 * Returns `true` if the supplied argument is a Flyd stream and `false` otherwise.
+	 *
+	 * __Signature__: `* -> Boolean`
+	 *
+	 * @name flyd.isStream
+	 * @param {*} value - the value to test
+	 * @return {Boolean} `true` if is a Flyd streamn, `false` otherwise
+	 *
+	 * @example
+	 * var s = flyd.stream(1);
+	 * var n = 1;
+	 * flyd.isStream(s); //=> true
+	 * flyd.isStream(n); //=> false
+	 */
+	flyd.isStream = function(stream) {
+	  return isFunction(stream) && 'hasVal' in stream;
+	}
+
+	/**
+	 * Invokes the body (the function to calculate the value) of a dependent stream
+	 *
+	 * By default the body of a dependent stream is only called when all the streams
+	 * upon which it depends has a value. `immediate` can circumvent this behaviour.
+	 * It immediately invokes the body of a dependent stream.
+	 *
+	 * __Signature__: `Stream a -> Stream a`
+	 *
+	 * @name flyd.immediate
+	 * @param {stream} stream - the dependent stream
+	 * @return {stream} the same stream
+	 *
+	 * @example
+	 * var s = flyd.stream();
+	 * var hasItems = flyd.immediate(flyd.combine(function(s) {
+	 *   return s() !== undefined && s().length > 0;
+	 * }, [s]);
+	 * console.log(hasItems()); // logs `false`. Had `immediate` not been
+	 *                          // used `hasItems()` would've returned `undefined`
+	 * s([1]);
+	 * console.log(hasItems()); // logs `true`.
+	 * s([]);
+	 * console.log(hasItems()); // logs `false`.
+	 */
+	flyd.immediate = function(s) {
+	  if (s.depsMet === false) {
+	    s.depsMet = true;
+	    updateStream(s);
+	  }
+	  return s;
+	}
+
+	/**
+	 * Changes which `endsStream` should trigger the ending of `s`.
+	 *
+	 * __Signature__: `Stream a -> Stream b -> Stream b`
+	 *
+	 * @name flyd.endsOn
+	 * @param {stream} endStream - the stream to trigger the ending
+	 * @param {stream} stream - the stream to be ended by the endStream
+	 * @param {stream} the stream modified to be ended by endStream
+	 *
+	 * @example
+	 * var n = flyd.stream(1);
+	 * var killer = flyd.stream();
+	 * // `double` ends when `n` ends or when `killer` emits any value
+	 * var double = flyd.endsOn(flyd.merge(n.end, killer), flyd.combine(function(n) {
+	 *   return 2 * n();
+	 * }, [n]);
+	*/
+	flyd.endsOn = function(endS, s) {
+	  detachDeps(s.end);
+	  endS.listeners.push(s.end);
+	  s.end.deps.push(endS);
+	  return s;
+	}
+
+	/**
+	 * Map a stream
+	 *
+	 * Returns a new stream consisting of every value from `s` passed through
+	 * `fn`. I.e. `map` creates a new stream that listens to `s` and
+	 * applies `fn` to every new value.
+	 * __Signature__: `(a -> result) -> Stream a -> Stream result`
+	 *
+	 * @name flyd.map
+	 * @param {Function} fn - the function that produces the elements of the new stream
+	 * @param {stream} stream - the stream to map
+	 * @return {stream} a new stream with the mapped values
+	 *
+	 * @example
+	 * var numbers = flyd.stream(0);
+	 * var squaredNumbers = flyd.map(function(n) { return n*n; }, numbers);
+	 */
+	// Library functions use self callback to accept (null, undefined) update triggers.
+	flyd.map = curryN(2, function(f, s) {
+	  return combine(function(s, self) { self(f(s.val)); }, [s]);
+	})
+
+	/**
+	 * Listen to stream events
+	 *
+	 * Similair to `map` except that the returned stream is empty. Use `on` for doing
+	 * side effects in reaction to stream changes. Use the returned stream only if you
+	 * need to manually end it.
+	 *
+	 * __Signature__: `(a -> result) -> Stream a -> Stream undefined`
+	 *
+	 * @name flyd.on
+	 * @param {Function} cb - the callback
+	 * @param {stream} stream - the stream
+	 * @return {stream} an empty stream (can be ended)
+	 */
+	flyd.on = curryN(2, function(f, s) {
+	  return combine(function(s) { f(s.val); }, [s]);
+	})
+
+	/**
+	 * Creates a new stream with the results of calling the function on every incoming
+	 * stream with and accumulator and the incoming value.
+	 *
+	 * __Signature__: `(a -> b -> a) -> a -> Stream b -> Stream a`
+	 *
+	 * @name flyd.scan
+	 * @param {Function} fn - the function to call
+	 * @param {*} val - the initial value of the accumulator
+	 * @param {stream} stream - the stream source
+	 * @return {stream} the new stream
+	 *
+	 * @example
+	 * var numbers = flyd.stream();
+	 * var sum = flyd.scan(function(sum, n) { return sum+n; }, 0, numbers);
+	 * numbers(2)(3)(5);
+	 * sum(); // 10
+	 */
+	flyd.scan = curryN(3, function(f, acc, s) {
+	  var ns = combine(function(s, self) {
+	    self(acc = f(acc, s.val));
+	  }, [s]);
+	  if (!ns.hasVal) ns(acc);
+	  return ns;
+	});
+
+	/**
+	 * Creates a new stream down which all values from both `stream1` and `stream2`
+	 * will be sent.
+	 *
+	 * __Signature__: `Stream a -> Stream a -> Stream a`
+	 *
+	 * @name flyd.merge
+	 * @param {stream} source1 - one stream to be merged
+	 * @param {stream} source2 - the other stream to be merged
+	 * @return {stream} a stream with the values from both sources
+	 *
+	 * @example
+	 * var btn1Clicks = flyd.stream();
+	 * button1Elm.addEventListener(btn1Clicks);
+	 * var btn2Clicks = flyd.stream();
+	 * button2Elm.addEventListener(btn2Clicks);
+	 * var allClicks = flyd.merge(btn1Clicks, btn2Clicks);
+	 */
+	flyd.merge = curryN(2, function(s1, s2) {
+	  var s = flyd.immediate(combine(function(s1, s2, self, changed) {
+	    if (changed[0]) {
+	      self(changed[0]());
+	    } else if (s1.hasVal) {
+	      self(s1.val);
+	    } else if (s2.hasVal) {
+	      self(s2.val);
+	    }
+	  }, [s1, s2]));
+	  flyd.endsOn(combine(function() {
+	    return true;
+	  }, [s1.end, s2.end]), s);
+	  return s;
+	});
+
+	/**
+	 * Creates a new stream resulting from applying `transducer` to `stream`.
+	 *
+	 * __Signature__: `Transducer -> Stream a -> Stream b`
+	 *
+	 * @name flyd.transduce
+	 * @param {Transducer} xform - the transducer transformation
+	 * @param {stream} source - the stream source
+	 * @return {stream} the new stream
+	 *
+	 * @example
+	 * var t = require('transducers.js');
+	 *
+	 * var results = [];
+	 * var s1 = flyd.stream();
+	 * var tx = t.compose(t.map(function(x) { return x * 2; }), t.dedupe());
+	 * var s2 = flyd.transduce(tx, s1);
+	 * flyd.combine(function(s2) { results.push(s2()); }, [s2]);
+	 * s1(1)(1)(2)(3)(3)(3)(4);
+	 * results; // => [2, 4, 6, 8]
+	 */
+	flyd.transduce = curryN(2, function(xform, source) {
 	  xform = xform(new StreamTransformer());
 	  return combine(function(source, self) {
 	    var res = xform['@@transducer/step'](undefined, source.val);
@@ -1083,34 +875,387 @@
 	  }, [source]);
 	});
 
+	/**
+	 * Returns `fn` curried to `n`. Use this function to curry functions exposed by
+	 * modules for Flyd.
+	 *
+	 * @name flyd.curryN
+	 * @function
+	 * @param {Integer} arity - the function arity
+	 * @param {Function} fn - the function to curry
+	 * @return {Function} the curried function
+	 *
+	 * @example
+	 * function add(x, y) { return x + y; };
+	 * var a = flyd.curryN(2, add);
+	 * a(2)(4) // => 6
+	 */
+	flyd.curryN = curryN
+
+	/**
+	 * Returns a new stream identical to the original except every
+	 * value will be passed through `f`.
+	 *
+	 * _Note:_ This function is included in order to support the fantasy land
+	 * specification.
+	 *
+	 * __Signature__: Called bound to `Stream a`: `(a -> b) -> Stream b`
+	 *
+	 * @name stream.map
+	 * @param {Function} function - the function to apply
+	 * @return {stream} a new stream with the values mapped
+	 *
+	 * @example
+	 * var numbers = flyd.stream(0);
+	 * var squaredNumbers = numbers.map(function(n) { return n*n; });
+	 */
+	function boundMap(f) { return flyd.map(f, this); }
+
+	/**
+	 * Returns a new stream which is the result of applying the
+	 * functions from `this` stream to the values in `stream` parameter.
+	 *
+	 * `this` stream must be a stream of functions.
+	 *
+	 * _Note:_ This function is included in order to support the fantasy land
+	 * specification.
+	 *
+	 * __Signature__: Called bound to `Stream (a -> b)`: `a -> Stream b`
+	 *
+	 * @name stream.ap
+	 * @param {stream} stream - the values stream
+	 * @return {stream} a new stram with the functions applied to values
+	 *
+	 * @example
+	 * var add = flyd.curryN(2, function(x, y) { return x + y; });
+	 * var numbers1 = flyd.stream();
+	 * var numbers2 = flyd.stream();
+	 * var addToNumbers1 = flyd.map(add, numbers1);
+	 * var added = addToNumbers1.ap(numbers2);
+	 */
+	function ap(s2) {
+	  var s1 = this;
+	  return combine(function(s1, s2, self) { self(s1.val(s2.val)); }, [s1, s2]);
+	}
+
+	/**
+	 * Get a human readable view of a stream
+	 * @name stream.toString
+	 * @return {String} the stream string representation
+	 */
+	function streamToString() {
+	  return 'stream(' + this.val + ')';
+	}
+
+	/**
+	 * @name stream.end
+	 * @memberof stream
+	 * A stream that emits `true` when the stream ends. If `true` is pushed down the
+	 * stream the parent stream ends.
+	 */
+
+	/**
+	 * @name stream.of
+	 * @function
+	 * @memberof stream
+	 * Returns a new stream with `value` as its initial value. It is identical to
+	 * calling `flyd.stream` with one argument.
+	 *
+	 * __Signature__: Called bound to `Stream (a)`: `b -> Stream b`
+	 *
+	 * @param {*} value - the initial value
+	 * @return {stream} the new stream
+	 *
+	 * @example
+	 * var n = flyd.stream(1);
+	 * var m = n.of(1);
+	 */
+
+	// /////////////////////////// PRIVATE ///////////////////////////////// //
+	/**
+	 * @private
+	 * Create a stream with no dependencies and no value
+	 * @return {Function} a flyd stream
+	 */
+	function createStream() {
+	  function s(n) {
+	    if (arguments.length === 0) {
+	      // only register to currentAutoStreamFn if value is accessed using s()
+	      if (currentAutoStreamFn) {
+	        if (currentAutoStreamFn.deps.indexOf(s) === -1) {
+	          currentAutoStreamFn.deps.push(s);
+	        }
+	      }
+	      return s.val;
+	    }
+	    updateStreamValue(s, n)
+	    return s
+	  }
+	  s.hasVal = false;
+	  s.val = undefined;
+	  s.vals = [];
+	  s.listeners = [];
+	  s.queued = false;
+	  s.end = undefined;
+	  s.map = boundMap;
+	  s.ap = ap;
+	  s.of = flyd.stream;
+	  s.toString = streamToString;
+	  return s;
+	}
+
+	/**
+	 * @private
+	 * Create a dependent stream
+	 * @param {Array<stream>} dependencies - an array of the streams
+	 * @param {Function} fn - the function used to calculate the new stream value
+	 * from the dependencies
+	 * @return {stream} the created stream
+	 */
+	function createDependentStream(deps, fn) {
+	  var s = createStream();
+	  s.fn = fn;
+	  s.deps = deps;
+	  s.depsMet = false;
+	  s.depsChanged = deps.length > 0 ? [] : undefined;
+	  s.shouldUpdate = false;
+	  addListeners(deps, s);
+	  return s;
+	}
+
+	/**
+	 * @private
+	 * Check if all the dependencies have values
+	 * @param {stream} stream - the stream to check depencencies from
+	 * @return {Boolean} `true` if all dependencies have vales, `false` otherwise
+	 */
+	function initialDepsNotMet(stream) {
+	  stream.depsMet = stream.deps.every(function(s) {
+	    return s.hasVal;
+	  });
+	  return !stream.depsMet;
+	}
+
+	/**
+	 * @private
+	 * Update a dependent stream using its dependencies in an atomic way
+	 * @param {stream} stream - the stream to update
+	 */
+	function updateStream(s) {
+	  if ((s.depsMet !== true && initialDepsNotMet(s)) ||
+	      (s.end !== undefined && s.end.val === true)) return;
+	  if (inStream !== undefined) {
+	    toUpdate.push(s);
+	    return;
+	  }
+	  inStream = s;
+	  if (s.depsChanged) s.fnArgs[s.fnArgs.length - 1] = s.depsChanged;
+	  var returnVal = s.fn.apply(s.fn, s.fnArgs);
+	  if (returnVal !== undefined) {
+	    s(returnVal);
+	  }
+	  inStream = undefined;
+	  if (s.depsChanged !== undefined) s.depsChanged = [];
+	  s.shouldUpdate = false;
+	  if (flushing === false) flushUpdate();
+	}
+
+	/**
+	 * @private
+	 * Update the dependencies of a stream
+	 * @param {stream} stream
+	 */
+	function updateDeps(s) {
+	  var i, o, list
+	  var listeners = s.listeners;
+	  for (i = 0; i < listeners.length; ++i) {
+	    list = listeners[i];
+	    if (list.end === s) {
+	      endStream(list);
+	    } else {
+	      if (list.depsChanged !== undefined) list.depsChanged.push(s);
+	      list.shouldUpdate = true;
+	      findDeps(list);
+	    }
+	  }
+	  for (; orderNextIdx >= 0; --orderNextIdx) {
+	    o = order[orderNextIdx];
+	    if (o.shouldUpdate === true) updateStream(o);
+	    o.queued = false;
+	  }
+	}
+
+	/**
+	 * @private
+	 * Add stream dependencies to the global `order` queue.
+	 * @param {stream} stream
+	 * @see updateDeps
+	 */
+	function findDeps(s) {
+	  var i
+	  var listeners = s.listeners;
+	  if (s.queued === false) {
+	    s.queued = true;
+	    for (i = 0; i < listeners.length; ++i) {
+	      findDeps(listeners[i]);
+	    }
+	    order[++orderNextIdx] = s;
+	  }
+	}
+
+	/**
+	 * @private
+	 */
+	function flushUpdate() {
+	  flushing = true;
+	  while (toUpdate.length > 0) {
+	    var s = toUpdate.shift();
+	    if (s.vals.length > 0) s.val = s.vals.shift();
+	    updateDeps(s);
+	  }
+	  flushing = false;
+	}
+
+	/**
+	 * @private
+	 * Push down a value into a stream
+	 * @param {stream} stream
+	 * @param {*} value
+	 */
+	function updateStreamValue(s, n) {
+	  if (n !== undefined && n !== null && isFunction(n.then)) {
+	    n.then(s);
+	    return;
+	  }
+	  s.val = n;
+	  s.hasVal = true;
+	  if (inStream === undefined) {
+	    flushing = true;
+	    updateDeps(s);
+	    if (toUpdate.length > 0) flushUpdate(); else flushing = false;
+	  } else if (inStream === s) {
+	    markListeners(s, s.listeners);
+	  } else {
+	    s.vals.push(n);
+	    toUpdate.push(s);
+	  }
+	}
+
+	/**
+	 * @private
+	 */
+	function markListeners(s, lists) {
+	  var i, list;
+	  for (i = 0; i < lists.length; ++i) {
+	    list = lists[i];
+	    if (list.end !== s) {
+	      if (list.depsChanged !== undefined) {
+	        list.depsChanged.push(s);
+	      }
+	      list.shouldUpdate = true;
+	    } else {
+	      endStream(list);
+	    }
+	  }
+	}
+
+	/**
+	 * @private
+	 * Add dependencies to a stream
+	 * @param {Array<stream>} dependencies
+	 * @param {stream} stream
+	 */
+	function addListeners(deps, s) {
+	  for (var i = 0; i < deps.length; ++i) {
+	    deps[i].listeners.push(s);
+	  }
+	}
+
+	/**
+	 * @private
+	 * Removes an stream from a dependency array
+	 * @param {stream} stream
+	 * @param {Array<stream>} dependencies
+	 */
+	function removeListener(s, listeners) {
+	  var idx = listeners.indexOf(s);
+	  listeners[idx] = listeners[listeners.length - 1];
+	  listeners.length--;
+	}
+
+	/**
+	 * @private
+	 * Detach a stream from its dependencies
+	 * @param {stream} stream
+	 */
+	function detachDeps(s) {
+	  for (var i = 0; i < s.deps.length; ++i) {
+	    removeListener(s, s.deps[i].listeners);
+	  }
+	  s.deps.length = 0;
+	}
+
+	/**
+	 * @private
+	 * Ends a stream
+	 */
+	function endStream(s) {
+	  if (s.deps !== undefined) detachDeps(s);
+	  if (s.end !== undefined) detachDeps(s.end);
+	}
+
+	function autoFn(fn) {
+	  var thisStream = flyd.stream();
+	  thisStream.deps = [];
+	  thisStream.blisteners = [];
+	  function updateListeners() {
+	    currentAutoStreamFn = thisStream;
+	    autoStreamFnStack.push(thisStream);
+	    // clear all triggers / listeners
+	    detachDeps(thisStream);
+	    // rerun fn and collect triggers / listeners
+	    var result = fn();
+	    addListeners(thisStream.deps, thisStream);
+	    // reset currentAutoStreamFn
+	    autoStreamFnStack.pop();
+	    currentAutoStreamFn = autoStreamFnStack[autoStreamFnStack.length - 1]; // last item
+	    thisStream(result);
+	  }
+	  thisStream.fn = updateListeners;
+	  updateListeners();
+
+	  return thisStream;
+	}
+	flyd.autoFn = autoFn;
+
+	function autoOut(fn) {
+	  var saveCurrent = currentAutoStreamFn;
+	  currentAutoStreamFn = null;
+	  fn();
+	  currentAutoStreamFn = saveCurrent;
+	}
+	flyd.autoOut = autoOut;
+
+	/**
+	 * @private
+	 * transducer stream transformer
+	 */
 	function StreamTransformer() { }
 	StreamTransformer.prototype['@@transducer/init'] = function() { };
 	StreamTransformer.prototype['@@transducer/result'] = function() { };
 	StreamTransformer.prototype['@@transducer/step'] = function(s, v) { return v; };
 
-	module.exports = {
-	  stream: stream,
-	  combine: curryN(2, combine),
-	  isStream: isStream,
-	  transduce: transduce,
-	  merge: merge,
-	  scan: scan,
-	  endsOn: endsOn,
-	  map: curryN(2, map),
-	  on: curryN(2, on),
-	  curryN: curryN,
-	  immediate: immediate,
-	};
+	module.exports = flyd;
 
 
 /***/ },
-/* 7 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _arity = __webpack_require__(8);
-	var _curry1 = __webpack_require__(9);
-	var _curry2 = __webpack_require__(10);
-	var _curryN = __webpack_require__(11);
+	var _arity = __webpack_require__(4);
+	var _curry1 = __webpack_require__(5);
+	var _curry2 = __webpack_require__(6);
+	var _curryN = __webpack_require__(7);
 
 
 	/**
@@ -1165,7 +1310,7 @@
 
 
 /***/ },
-/* 8 */
+/* 4 */
 /***/ function(module, exports) {
 
 	module.exports = function _arity(n, fn) {
@@ -1188,7 +1333,7 @@
 
 
 /***/ },
-/* 9 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -1213,10 +1358,10 @@
 
 
 /***/ },
-/* 10 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _curry1 = __webpack_require__(9);
+	var _curry1 = __webpack_require__(5);
 
 
 	/**
@@ -1251,10 +1396,10 @@
 
 
 /***/ },
-/* 11 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _arity = __webpack_require__(8);
+	var _arity = __webpack_require__(4);
 
 
 	/**
@@ -1295,7 +1440,7 @@
 
 
 /***/ },
-/* 12 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/*!
@@ -1739,16 +1884,18 @@
 	  var
 	    node = e.currentTarget,
 	    attrChange = e.attrChange,
-	    prevValue = e.prevValue,
-	    newValue = e.newValue
+	    attrName = e.attrName,
+	    target = e.target
 	  ;
 	  if (notFromInnerHTMLHelper &&
+	      (!target || target === node) &&
 	      node.attributeChangedCallback &&
-	      e.attrName !== 'style') {
+	      attrName !== 'style' &&
+	      e.prevValue !== e.newValue) {
 	    node.attributeChangedCallback(
-	      e.attrName,
-	      attrChange === e[ADDITION] ? null : prevValue,
-	      attrChange === e[REMOVAL] ? null : newValue
+	      attrName,
+	      attrChange === e[ADDITION] ? null : e.prevValue,
+	      attrChange === e[REMOVAL] ? null : e.newValue
 	    );
 	  }
 	}
@@ -1807,10 +1954,15 @@
 	  ) {
 	    node = targets[i];
 	    if (!documentElement.contains(node)) {
-	      targets.splice(i, 1);
+	      length--;
+	      targets.splice(i--, 1);
 	      verifyAndSetupAndAction(node, DETACHED);
 	    }
 	  }
+	}
+
+	function throwTypeError(type) {
+	  throw new Error('A ' + type + ' type is already registered');
 	}
 
 	function verifyAndSetupAndAction(node, action) {
@@ -1852,7 +2004,7 @@
 	        }
 	        return new MutationObserver(function (records) {
 	          for (var
-	            current, node,
+	            current, node, newValue,
 	            i = 0, length = records.length; i < length; i++
 	          ) {
 	            current = records[i];
@@ -1864,11 +2016,14 @@
 	              if (notFromInnerHTMLHelper &&
 	                  node.attributeChangedCallback &&
 	                  current.attributeName !== 'style') {
-	                node.attributeChangedCallback(
-	                  current.attributeName,
-	                  current.oldValue,
-	                  node.getAttribute(current.attributeName)
-	                );
+	                newValue = node.getAttribute(current.attributeName);
+	                if (newValue !== current.oldValue) {
+	                  node.attributeChangedCallback(
+	                    current.attributeName,
+	                    current.oldValue,
+	                    newValue
+	                  );
+	                }
 	              }
 	            }
 	          }
@@ -1935,7 +2090,7 @@
 	    indexOf.call(types, PREFIX_IS + upperType) +
 	    indexOf.call(types, PREFIX_TAG + upperType)
 	  )) {
-	    throw new Error('A ' + type + ' type is already registered');
+	    throwTypeError(type);
 	  }
 
 	  if (!validName.test(upperType) || -1 < indexOf.call(invalidNames, upperType)) {
@@ -1951,9 +2106,17 @@
 	    opt = options || OP,
 	    extending = hOP.call(opt, EXTENDS),
 	    nodeName = extending ? options[EXTENDS].toUpperCase() : upperType,
-	    i = types.push((extending ? PREFIX_IS : PREFIX_TAG) + upperType) - 1,
-	    upperType
+	    upperType,
+	    i
 	  ;
+
+	  if (extending && -1 < (
+	    indexOf.call(types, PREFIX_TAG + nodeName)
+	  )) {
+	    throwTypeError(nodeName);
+	  }
+
+	  i = types.push((extending ? PREFIX_IS : PREFIX_TAG) + upperType) - 1;
 
 	  query = query.concat(
 	    query.length ? ',' : '',
@@ -1977,15 +2140,15 @@
 	}(window, document, Object, 'registerElement'));
 
 /***/ },
-/* 13 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// jshint newcap: false
-	/* global require, module, document, Element */
+	/* global require, module, document, Node */
 	'use strict';
 
-	var VNode = __webpack_require__(3);
-	var is = __webpack_require__(4);
+	var VNode = __webpack_require__(10);
+	var is = __webpack_require__(11);
 
 	function isUndef(s) { return s === undefined; }
 	function isDef(s) { return s !== undefined; }
@@ -2177,9 +2340,12 @@
 	      if (isDef(oldCh) && isDef(ch)) {
 	        if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue);
 	      } else if (isDef(ch)) {
+	        if (isDef(oldVnode.text)) elm.textContent = '';
 	        addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
 	      } else if (isDef(oldCh)) {
 	        removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+	      } else if (isDef(oldVnode.text)) {
+	        elm.textContent = '';
 	      }
 	    } else if (oldVnode.text !== vnode.text) {
 	      elm.textContent = vnode.text;
@@ -2193,7 +2359,7 @@
 	    var i;
 	    var insertedVnodeQueue = [];
 	    for (i = 0; i < cbs.pre.length; ++i) cbs.pre[i]();
-	    if (oldVnode instanceof Element) {
+	    if (oldVnode.nodeType === Node.ELEMENT_NODE) {
 	      if (oldVnode.parentElement !== null) {
 	        createElm(vnode, insertedVnodeQueue);
 	        oldVnode.parentElement.replaceChild(vnode.elm, oldVnode);
@@ -2216,13 +2382,39 @@
 
 
 /***/ },
-/* 14 */
+/* 10 */
+/***/ function(module, exports) {
+
+	module.exports = function(sel, data, children, text, elm) {
+	  var key = data === undefined ? undefined : data.key;
+	  return {sel: sel, data: data, children: children,
+	          text: text, elm: elm, key: key};
+	};
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	module.exports = {
+	  array: Array.isArray,
+	  primitive: function(s) { return typeof s === 'string' || typeof s === 'number'; },
+	};
+
+
+/***/ },
+/* 12 */
 /***/ function(module, exports) {
 
 	function updateClass(oldVnode, vnode) {
 	  var cur, name, elm = vnode.elm,
 	      oldClass = oldVnode.data.class || {},
 	      klass = vnode.data.class || {};
+	  for (name in oldClass) {
+	    if (!klass[name]) {
+	      elm.classList.remove(name);
+	    }
+	  }
 	  for (name in klass) {
 	    cur = klass[name];
 	    if (cur !== oldClass[name]) {
@@ -2235,7 +2427,7 @@
 
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports) {
 
 	var booleanAttrs = ["allowfullscreen", "async", "autofocus", "autoplay", "checked", "compact", "controls", "declare", 
@@ -2280,16 +2472,21 @@
 
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports) {
 
 	function updateProps(oldVnode, vnode) {
 	  var key, cur, old, elm = vnode.elm,
 	      oldProps = oldVnode.data.props || {}, props = vnode.data.props || {};
+	  for (key in oldProps) {
+	    if (!props[key]) {
+	      delete elm[key];
+	    }
+	  }
 	  for (key in props) {
 	    cur = props[key];
 	    old = oldProps[key];
-	    if (old !== cur) {
+	    if (old !== cur && (key !== 'value' || elm[key] !== cur)) {
 	      elm[key] = cur;
 	    }
 	  }
@@ -2299,10 +2496,10 @@
 
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports) {
 
-	var raf = requestAnimationFrame || setTimeout;
+	var raf = (window && window.requestAnimationFrame) || setTimeout;
 	var nextFrame = function(fn) { raf(function() { raf(fn); }); };
 
 	function setNextFrame(obj, prop, val) {
@@ -2314,6 +2511,11 @@
 	      oldStyle = oldVnode.data.style || {},
 	      style = vnode.data.style || {},
 	      oldHasDel = 'delayed' in oldStyle;
+	  for (name in oldStyle) {
+	    if (!style[name]) {
+	      elm.style[name] = '';
+	    }
+	  }
 	  for (name in style) {
 	    cur = style[name];
 	    if (name === 'delayed') {
@@ -2364,10 +2566,10 @@
 
 
 /***/ },
-/* 18 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var is = __webpack_require__(4);
+	var is = __webpack_require__(11);
 
 	function arrInvoker(arr) {
 	  return function() {
@@ -2411,7 +2613,7 @@
 
 
 /***/ },
-/* 19 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
@@ -2421,7 +2623,6 @@
 
 	    function setVnodeState(oldVnode, vnode) {
 	        if (vnode.data.state) {
-	            vnode.elm.runUpdate = true;
 	            vnode.elm.streamState(vnode.data.state);
 	        }
 	    }
@@ -2435,7 +2636,7 @@
 	//# sourceMappingURL=state.js.map
 
 /***/ },
-/* 20 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
@@ -2446,8 +2647,8 @@
 	    function createCustomElement(emptyVnode, vnode) {
 	        var tagName = vnode.sel.split(/[\.#]/)[0];
 	        if (tagName.indexOf("-") !== -1) {
-	            vnode.elm.runUpdate = true;
-	            if (vnode.elm.update) {
+	            if (!vnode.elm._isInitialized && vnode.elm.update) {
+	                vnode.elm.runUpdate = true;
 	                vnode.elm.update();
 	            }
 	        }
@@ -2461,7 +2662,7 @@
 	//# sourceMappingURL=customElement.js.map
 
 /***/ },
-/* 21 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
@@ -2485,319 +2686,14 @@
 	//# sourceMappingURL=elms.js.map
 
 /***/ },
-/* 22 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var curryN = __webpack_require__(7);
-
-	'use strict';
-
-	function isFunction(obj) {
-	  return !!(obj && obj.constructor && obj.call && obj.apply);
-	}
-
-	// Globals
-	var toUpdate = [];
-	var inStream;
-
-	// Library functions use self callback to accept (null, undefined) update triggers.
-	function map(f, s) {
-	  return combine(function(s, self) { self(f(s.val)); }, [s]);
-	}
-
-	function on(f, s) {
-	  return combine(function(s) { f(s.val); }, [s]);
-	}
-
-	function boundMap(f) { return map(f, this); }
-
-	var scan = curryN(3, function(f, acc, s) {
-	  var ns = combine(function(s, self) {
-	    self(acc = f(acc, s.val));
-	  }, [s]);
-	  if (!ns.hasVal) ns(acc);
-	  return ns;
-	});
-
-	var merge = curryN(2, function(s1, s2) {
-	  var s = immediate(combine(function(s1, s2, self, changed) {
-	    if (changed[0]) {
-	      self(changed[0]());
-	    } else if (s1.hasVal) {
-	      self(s1.val);
-	    } else if (s2.hasVal) {
-	      self(s2.val);
-	    }
-	  }, [s1, s2]));
-	  endsOn(combine(function() {
-	    return true;
-	  }, [s1.end, s2.end]), s);
-	  return s;
-	});
-
-	function ap(s2) {
-	  var s1 = this;
-	  return combine(function(s1, s2, self) { self(s1.val(s2.val)); }, [s1, s2]);
-	}
-
-	function initialDepsNotMet(stream) {
-	  stream.depsMet = stream.deps.every(function(s) {
-	    return s.hasVal;
-	  });
-	  return !stream.depsMet;
-	}
-
-	function updateStream(s) {
-	  if ((s.depsMet !== true && initialDepsNotMet(s)) ||
-	      (s.end !== undefined && s.end.val === true)) return;
-	  if (inStream !== undefined) {
-	    toUpdate.push(s);
-	    return;
-	  }
-	  inStream = s;
-	  if (s.depsChanged) s.fnArgs[s.fnArgs.length - 1] = s.depsChanged;
-	  var returnVal = s.fn.apply(s.fn, s.fnArgs);
-	  if (returnVal !== undefined) {
-	    s(returnVal);
-	  }
-	  inStream = undefined;
-	  if (s.depsChanged !== undefined) s.depsChanged = [];
-	  s.shouldUpdate = false;
-	  if (flushing === false) flushUpdate();
-	}
-
-	var order = [];
-	var orderNextIdx = -1;
-
-	function findDeps(s) {
-	  var i, listeners = s.listeners;
-	  if (s.queued === false) {
-	    s.queued = true;
-	    for (i = 0; i < listeners.length; ++i) {
-	      findDeps(listeners[i]);
-	    }
-	    order[++orderNextIdx] = s;
-	  }
-	}
-
-	function updateDeps(s) {
-	  var i, o, list, listeners = s.listeners;
-	  for (i = 0; i < listeners.length; ++i) {
-	    list = listeners[i];
-	    if (list.end === s) {
-	      endStream(list);
-	    } else {
-	      if (list.depsChanged !== undefined) list.depsChanged.push(s);
-	      list.shouldUpdate = true;
-	      findDeps(list);
-	    }
-	  }
-	  for (; orderNextIdx >= 0; --orderNextIdx) {
-	    o = order[orderNextIdx];
-	    if (o.shouldUpdate === true) updateStream(o);
-	    o.queued = false;
-	  }
-	}
-
-	var flushing = false;
-
-	function flushUpdate() {
-	  flushing = true;
-	  while (toUpdate.length > 0) {
-	    var s = toUpdate.shift();
-	    if (s.vals.length > 0) s.val = s.vals.shift();
-	    updateDeps(s);
-	  }
-	  flushing = false;
-	}
-
-	function isStream(stream) {
-	  return isFunction(stream) && 'hasVal' in stream;
-	}
-
-	function streamToString() {
-	  return 'stream(' + this.val + ')';
-	}
-
-	function updateStreamValue(s, n) {
-	  if (n !== undefined && n !== null && isFunction(n.then)) {
-	    n.then(s);
-	    return;
-	  }
-	  s.val = n;
-	  s.hasVal = true;
-	  if (inStream === undefined) {
-	    flushing = true;
-	    updateDeps(s);
-	    if (toUpdate.length > 0) flushUpdate(); else flushing = false;
-	  } else if (inStream === s) {
-	    markListeners(s, s.listeners);
-	  } else {
-	    s.vals.push(n);
-	    toUpdate.push(s);
-	  }
-	}
-
-	function markListeners(s, lists) {
-	  var i, list;
-	  for (i = 0; i < lists.length; ++i) {
-	    list = lists[i];
-	    if (list.end !== s) {
-	      if (list.depsChanged !== undefined) {
-	        list.depsChanged.push(s);
-	      }
-	      list.shouldUpdate = true;
-	    } else {
-	      endStream(list);
-	    }
-	  }
-	}
-
-	function createStream() {
-	  function s(n) {
-	    return arguments.length > 0 ? (updateStreamValue(s, n), s)
-	                                : s.val;
-	  }
-	  s.hasVal = false;
-	  s.val = undefined;
-	  s.vals = [];
-	  s.listeners = [];
-	  s.queued = false;
-	  s.end = undefined;
-
-	  s.map = boundMap;
-	  s.ap = ap;
-	  s.of = stream;
-	  s.toString = streamToString;
-
-	  return s;
-	}
-
-	function addListeners(deps, s) {
-	  for (var i = 0; i < deps.length; ++i) {
-	    deps[i].listeners.push(s);
-	  }
-	}
-
-	function createDependentStream(deps, fn) {
-	  var s = createStream();
-	  s.fn = fn;
-	  s.deps = deps;
-	  s.depsMet = false;
-	  s.depsChanged = deps.length > 0 ? [] : undefined;
-	  s.shouldUpdate = false;
-	  addListeners(deps, s);
-	  return s;
-	}
-
-	function immediate(s) {
-	  if (s.depsMet === false) {
-	    s.depsMet = true;
-	    updateStream(s);
-	  }
-	  return s;
-	}
-
-	function removeListener(s, listeners) {
-	  var idx = listeners.indexOf(s);
-	  listeners[idx] = listeners[listeners.length - 1];
-	  listeners.length--;
-	}
-
-	function detachDeps(s) {
-	  for (var i = 0; i < s.deps.length; ++i) {
-	    removeListener(s, s.deps[i].listeners);
-	  }
-	  s.deps.length = 0;
-	}
-
-	function endStream(s) {
-	  if (s.deps !== undefined) detachDeps(s);
-	  if (s.end !== undefined) detachDeps(s.end);
-	}
-
-	function endsOn(endS, s) {
-	  detachDeps(s.end);
-	  endS.listeners.push(s.end);
-	  s.end.deps.push(endS);
-	  return s;
-	}
-
-	function trueFn() { return true; }
-
-	function stream(initialValue) {
-	  var endStream = createDependentStream([], trueFn);
-	  var s = createStream();
-	  s.end = endStream;
-	  s.fnArgs = [];
-	  endStream.listeners.push(s);
-	  if (arguments.length > 0) s(initialValue);
-	  return s;
-	}
-
-	function combine(fn, streams) {
-	  var i, s, deps, depEndStreams;
-	  var endStream = createDependentStream([], trueFn);
-	  deps = []; depEndStreams = [];
-	  for (i = 0; i < streams.length; ++i) {
-	    if (streams[i] !== undefined) {
-	      deps.push(streams[i]);
-	      if (streams[i].end !== undefined) depEndStreams.push(streams[i].end);
-	    }
-	  }
-	  s = createDependentStream(deps, fn);
-	  s.depsChanged = [];
-	  s.fnArgs = s.deps.concat([s, s.depsChanged]);
-	  s.end = endStream;
-	  endStream.listeners.push(s);
-	  addListeners(depEndStreams, endStream);
-	  endStream.deps = depEndStreams;
-	  updateStream(s);
-	  return s;
-	}
-
-	var transduce = curryN(2, function(xform, source) {
-	  xform = xform(new StreamTransformer());
-	  return combine(function(source, self) {
-	    var res = xform['@@transducer/step'](undefined, source.val);
-	    if (res && res['@@transducer/reduced'] === true) {
-	      self.end(true);
-	      return res['@@transducer/value'];
-	    } else {
-	      return res;
-	    }
-	  }, [source]);
-	});
-
-	function StreamTransformer() { }
-	StreamTransformer.prototype['@@transducer/init'] = function() { };
-	StreamTransformer.prototype['@@transducer/result'] = function() { };
-	StreamTransformer.prototype['@@transducer/step'] = function(s, v) { return v; };
-
-	module.exports = {
-	  stream: stream,
-	  combine: curryN(2, combine),
-	  isStream: isStream,
-	  transduce: transduce,
-	  merge: merge,
-	  scan: scan,
-	  endsOn: endsOn,
-	  map: curryN(2, map),
-	  on: curryN(2, on),
-	  curryN: curryN,
-	  immediate: immediate,
-	};
+	module.exports = __webpack_require__(21);
 
 
 /***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(24);
-
-
-/***/ },
-/* 24 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -2819,13 +2715,13 @@
 	 * Assertion Error
 	 */
 
-	exports.AssertionError = __webpack_require__(25);
+	exports.AssertionError = __webpack_require__(22);
 
 	/*!
 	 * Utils for plugins (not exported)
 	 */
 
-	var util = __webpack_require__(26);
+	var util = __webpack_require__(23);
 
 	/**
 	 * # .use(function)
@@ -2856,47 +2752,47 @@
 	 * Configuration
 	 */
 
-	var config = __webpack_require__(39);
+	var config = __webpack_require__(36);
 	exports.config = config;
 
 	/*!
 	 * Primary `Assertion` prototype
 	 */
 
-	var assertion = __webpack_require__(58);
+	var assertion = __webpack_require__(55);
 	exports.use(assertion);
 
 	/*!
 	 * Core Assertions
 	 */
 
-	var core = __webpack_require__(59);
+	var core = __webpack_require__(56);
 	exports.use(core);
 
 	/*!
 	 * Expect interface
 	 */
 
-	var expect = __webpack_require__(60);
+	var expect = __webpack_require__(57);
 	exports.use(expect);
 
 	/*!
 	 * Should interface
 	 */
 
-	var should = __webpack_require__(61);
+	var should = __webpack_require__(58);
 	exports.use(should);
 
 	/*!
 	 * Assert interface
 	 */
 
-	var assert = __webpack_require__(62);
+	var assert = __webpack_require__(59);
 	exports.use(assert);
 
 
 /***/ },
-/* 25 */
+/* 22 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3014,7 +2910,7 @@
 
 
 /***/ },
-/* 26 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -3033,124 +2929,124 @@
 	 * test utility
 	 */
 
-	exports.test = __webpack_require__(27);
+	exports.test = __webpack_require__(24);
 
 	/*!
 	 * type utility
 	 */
 
-	exports.type = __webpack_require__(29);
+	exports.type = __webpack_require__(26);
 
 	/*!
 	 * expectTypes utility
 	 */
-	exports.expectTypes = __webpack_require__(31);
+	exports.expectTypes = __webpack_require__(28);
 
 	/*!
 	 * message utility
 	 */
 
-	exports.getMessage = __webpack_require__(32);
+	exports.getMessage = __webpack_require__(29);
 
 	/*!
 	 * actual utility
 	 */
 
-	exports.getActual = __webpack_require__(33);
+	exports.getActual = __webpack_require__(30);
 
 	/*!
 	 * Inspect util
 	 */
 
-	exports.inspect = __webpack_require__(34);
+	exports.inspect = __webpack_require__(31);
 
 	/*!
 	 * Object Display util
 	 */
 
-	exports.objDisplay = __webpack_require__(38);
+	exports.objDisplay = __webpack_require__(35);
 
 	/*!
 	 * Flag utility
 	 */
 
-	exports.flag = __webpack_require__(28);
+	exports.flag = __webpack_require__(25);
 
 	/*!
 	 * Flag transferring utility
 	 */
 
-	exports.transferFlags = __webpack_require__(40);
+	exports.transferFlags = __webpack_require__(37);
 
 	/*!
 	 * Deep equal utility
 	 */
 
-	exports.eql = __webpack_require__(41);
+	exports.eql = __webpack_require__(38);
 
 	/*!
 	 * Deep path value
 	 */
 
-	exports.getPathValue = __webpack_require__(49);
+	exports.getPathValue = __webpack_require__(46);
 
 	/*!
 	 * Deep path info
 	 */
 
-	exports.getPathInfo = __webpack_require__(50);
+	exports.getPathInfo = __webpack_require__(47);
 
 	/*!
 	 * Check if a property exists
 	 */
 
-	exports.hasProperty = __webpack_require__(51);
+	exports.hasProperty = __webpack_require__(48);
 
 	/*!
 	 * Function name
 	 */
 
-	exports.getName = __webpack_require__(35);
+	exports.getName = __webpack_require__(32);
 
 	/*!
 	 * add Property
 	 */
 
-	exports.addProperty = __webpack_require__(52);
+	exports.addProperty = __webpack_require__(49);
 
 	/*!
 	 * add Method
 	 */
 
-	exports.addMethod = __webpack_require__(53);
+	exports.addMethod = __webpack_require__(50);
 
 	/*!
 	 * overwrite Property
 	 */
 
-	exports.overwriteProperty = __webpack_require__(54);
+	exports.overwriteProperty = __webpack_require__(51);
 
 	/*!
 	 * overwrite Method
 	 */
 
-	exports.overwriteMethod = __webpack_require__(55);
+	exports.overwriteMethod = __webpack_require__(52);
 
 	/*!
 	 * Add a chainable method
 	 */
 
-	exports.addChainableMethod = __webpack_require__(56);
+	exports.addChainableMethod = __webpack_require__(53);
 
 	/*!
 	 * Overwrite chainable method
 	 */
 
-	exports.overwriteChainableMethod = __webpack_require__(57);
+	exports.overwriteChainableMethod = __webpack_require__(54);
 
 
 /***/ },
-/* 27 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -3163,7 +3059,7 @@
 	 * Module dependancies
 	 */
 
-	var flag = __webpack_require__(28);
+	var flag = __webpack_require__(25);
 
 	/**
 	 * # test(object, expression)
@@ -3184,7 +3080,7 @@
 
 
 /***/ },
-/* 28 */
+/* 25 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3223,14 +3119,14 @@
 
 
 /***/ },
-/* 29 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(30);
+	module.exports = __webpack_require__(27);
 
 
 /***/ },
-/* 30 */
+/* 27 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3370,7 +3266,7 @@
 
 
 /***/ },
-/* 31 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -3393,9 +3289,9 @@
 	 * @api public
 	 */
 
-	var AssertionError = __webpack_require__(25);
-	var flag = __webpack_require__(28);
-	var type = __webpack_require__(29);
+	var AssertionError = __webpack_require__(22);
+	var flag = __webpack_require__(25);
+	var type = __webpack_require__(26);
 
 	module.exports = function (obj, types) {
 	  var obj = flag(obj, 'object');
@@ -3418,7 +3314,7 @@
 
 
 /***/ },
-/* 32 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -3431,10 +3327,10 @@
 	 * Module dependancies
 	 */
 
-	var flag = __webpack_require__(28)
-	  , getActual = __webpack_require__(33)
-	  , inspect = __webpack_require__(34)
-	  , objDisplay = __webpack_require__(38);
+	var flag = __webpack_require__(25)
+	  , getActual = __webpack_require__(30)
+	  , inspect = __webpack_require__(31)
+	  , objDisplay = __webpack_require__(35);
 
 	/**
 	 * ### .getMessage(object, message, negateMessage)
@@ -3475,7 +3371,7 @@
 
 
 /***/ },
-/* 33 */
+/* 30 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3501,15 +3397,15 @@
 
 
 /***/ },
-/* 34 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// This is (almost) directly from Node.js utils
 	// https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
-	var getName = __webpack_require__(35);
-	var getProperties = __webpack_require__(36);
-	var getEnumerableProperties = __webpack_require__(37);
+	var getName = __webpack_require__(32);
+	var getProperties = __webpack_require__(33);
+	var getEnumerableProperties = __webpack_require__(34);
 
 	module.exports = inspect;
 
@@ -3842,7 +3738,7 @@
 
 
 /***/ },
-/* 35 */
+/* 32 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3870,7 +3766,7 @@
 
 
 /***/ },
-/* 36 */
+/* 33 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3912,7 +3808,7 @@
 
 
 /***/ },
-/* 37 */
+/* 34 */
 /***/ function(module, exports) {
 
 	/*!
@@ -3944,7 +3840,7 @@
 
 
 /***/ },
-/* 38 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -3957,8 +3853,8 @@
 	 * Module dependancies
 	 */
 
-	var inspect = __webpack_require__(34);
-	var config = __webpack_require__(39);
+	var inspect = __webpack_require__(31);
+	var config = __webpack_require__(36);
 
 	/**
 	 * ### .objDisplay (object)
@@ -4000,7 +3896,7 @@
 
 
 /***/ },
-/* 39 */
+/* 36 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -4061,7 +3957,7 @@
 
 
 /***/ },
-/* 40 */
+/* 37 */
 /***/ function(module, exports) {
 
 	/*!
@@ -4112,14 +4008,14 @@
 
 
 /***/ },
-/* 41 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(42);
+	module.exports = __webpack_require__(39);
 
 
 /***/ },
-/* 42 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -4132,14 +4028,14 @@
 	 * Module dependencies
 	 */
 
-	var type = __webpack_require__(43);
+	var type = __webpack_require__(40);
 
 	/*!
 	 * Buffer.isBuffer browser shim
 	 */
 
 	var Buffer;
-	try { Buffer = __webpack_require__(45).Buffer; }
+	try { Buffer = __webpack_require__(42).Buffer; }
 	catch(ex) {
 	  Buffer = {};
 	  Buffer.isBuffer = function() { return false; }
@@ -4382,14 +4278,14 @@
 
 
 /***/ },
-/* 43 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(44);
+	module.exports = __webpack_require__(41);
 
 
 /***/ },
-/* 44 */
+/* 41 */
 /***/ function(module, exports) {
 
 	/*!
@@ -4537,7 +4433,7 @@
 
 
 /***/ },
-/* 45 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
@@ -4550,9 +4446,9 @@
 
 	'use strict'
 
-	var base64 = __webpack_require__(46)
-	var ieee754 = __webpack_require__(47)
-	var isArray = __webpack_require__(48)
+	var base64 = __webpack_require__(43)
+	var ieee754 = __webpack_require__(44)
+	var isArray = __webpack_require__(45)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -6089,10 +5985,10 @@
 	  return i
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(45).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 46 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -6222,7 +6118,7 @@
 
 
 /***/ },
-/* 47 */
+/* 44 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -6312,7 +6208,7 @@
 
 
 /***/ },
-/* 48 */
+/* 45 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -6323,7 +6219,7 @@
 
 
 /***/ },
-/* 49 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6333,7 +6229,7 @@
 	 * MIT Licensed
 	 */
 
-	var getPathInfo = __webpack_require__(50);
+	var getPathInfo = __webpack_require__(47);
 
 	/**
 	 * ### .getPathValue(path, object)
@@ -6372,7 +6268,7 @@
 
 
 /***/ },
-/* 50 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6381,7 +6277,7 @@
 	 * MIT Licensed
 	 */
 
-	var hasProperty = __webpack_require__(51);
+	var hasProperty = __webpack_require__(48);
 
 	/**
 	 * ### .getPathInfo(path, object)
@@ -6489,7 +6385,7 @@
 
 
 /***/ },
-/* 51 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6498,7 +6394,7 @@
 	 * MIT Licensed
 	 */
 
-	var type = __webpack_require__(29);
+	var type = __webpack_require__(26);
 
 	/**
 	 * ### .hasProperty(object, name)
@@ -6559,7 +6455,7 @@
 
 
 /***/ },
-/* 52 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6568,8 +6464,8 @@
 	 * MIT Licensed
 	 */
 
-	var config = __webpack_require__(39);
-	var flag = __webpack_require__(28);
+	var config = __webpack_require__(36);
+	var flag = __webpack_require__(25);
 
 	/**
 	 * ### addProperty (ctx, name, getter)
@@ -6613,7 +6509,7 @@
 
 
 /***/ },
-/* 53 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6622,7 +6518,7 @@
 	 * MIT Licensed
 	 */
 
-	var config = __webpack_require__(39);
+	var config = __webpack_require__(36);
 
 	/**
 	 * ### .addMethod (ctx, name, method)
@@ -6649,7 +6545,7 @@
 	 * @name addMethod
 	 * @api public
 	 */
-	var flag = __webpack_require__(28);
+	var flag = __webpack_require__(25);
 
 	module.exports = function (ctx, name, method) {
 	  ctx[name] = function () {
@@ -6663,7 +6559,7 @@
 
 
 /***/ },
-/* 54 */
+/* 51 */
 /***/ function(module, exports) {
 
 	/*!
@@ -6724,7 +6620,7 @@
 
 
 /***/ },
-/* 55 */
+/* 52 */
 /***/ function(module, exports) {
 
 	/*!
@@ -6782,7 +6678,7 @@
 
 
 /***/ },
-/* 56 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6795,9 +6691,9 @@
 	 * Module dependencies
 	 */
 
-	var transferFlags = __webpack_require__(40);
-	var flag = __webpack_require__(28);
-	var config = __webpack_require__(39);
+	var transferFlags = __webpack_require__(37);
+	var flag = __webpack_require__(25);
+	var config = __webpack_require__(36);
 
 	/*!
 	 * Module variables
@@ -6900,7 +6796,7 @@
 
 
 /***/ },
-/* 57 */
+/* 54 */
 /***/ function(module, exports) {
 
 	/*!
@@ -6960,7 +6856,7 @@
 
 
 /***/ },
-/* 58 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -6970,7 +6866,7 @@
 	 * MIT Licensed
 	 */
 
-	var config = __webpack_require__(39);
+	var config = __webpack_require__(36);
 
 	module.exports = function (_chai, util) {
 	  /*!
@@ -7097,7 +6993,7 @@
 
 
 /***/ },
-/* 59 */
+/* 56 */
 /***/ function(module, exports) {
 
 	/*!
@@ -8963,7 +8859,7 @@
 
 
 /***/ },
-/* 60 */
+/* 57 */
 /***/ function(module, exports) {
 
 	/*!
@@ -9003,7 +8899,7 @@
 
 
 /***/ },
-/* 61 */
+/* 58 */
 /***/ function(module, exports) {
 
 	/*!
@@ -9210,7 +9106,7 @@
 
 
 /***/ },
-/* 62 */
+/* 59 */
 /***/ function(module, exports) {
 
 	/*!
@@ -10857,6 +10753,45 @@
 	  ('isNotSealed', 'notSealed')
 	  ('isFrozen', 'frozen')
 	  ('isNotFrozen', 'notFrozen');
+	};
+
+
+/***/ },
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var VNode = __webpack_require__(10);
+	var is = __webpack_require__(11);
+
+	function addNS(data, children) {
+	  data.ns = 'http://www.w3.org/2000/svg';
+	  if (children !== undefined) {
+	    for (var i = 0; i < children.length; ++i) {
+	      addNS(children[i].data, children[i].children);
+	    }
+	  }
+	}
+
+	module.exports = function h(sel, b, c) {
+	  var data = {}, children, text, i;
+	  if (arguments.length === 3) {
+	    data = b;
+	    if (is.array(c)) { children = c; }
+	    else if (is.primitive(c)) { text = c; }
+	  } else if (arguments.length === 2) {
+	    if (is.array(b)) { children = b; }
+	    else if (is.primitive(b)) { text = b; }
+	    else { data = b; }
+	  }
+	  if (is.array(children)) {
+	    for (i = 0; i < children.length; ++i) {
+	      if (is.primitive(children[i])) children[i] = VNode(undefined, undefined, undefined, children[i]);
+	    }
+	  }
+	  if (sel[0] === 's' && sel[1] === 'v' && sel[2] === 'g') {
+	    addNS(data, children);
+	  }
+	  return VNode(sel, data, children, text, undefined);
 	};
 
 

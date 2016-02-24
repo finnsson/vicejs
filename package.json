@@ -23,7 +23,7 @@
   "homepage": "https://github.com/finnsson/vicejs",
   "dependencies": {
     "document-register-element": "^0.5.4",
-    "flyd": "git+https://git@github.com:finnsson/flyd.git"
+    "flyd": "git+ssh://git@github.com/finnsson/flyd.git"
   },
   "typings": "index.d.ts",
   "devDependencies": {
