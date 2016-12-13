@@ -1,6 +1,6 @@
 {
   "name": "vicejs",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Virtual DOM for Custom Elements",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/finnsson/vicejs",
   "dependencies": {
     "document-register-element": "^0.5.4",
-    "flyd": "git+ssh://git@github.com/finnsson/flyd.git"
+    "flyd": "git+https://git@github.com/finnsson/flyd.git"
   },
   "typings": "index.d.ts",
   "devDependencies": {
